@@ -1,9 +1,11 @@
-<button class="sidebar-toggle" onclick="toggleSidebar()">
+<!-- sidebar.component.html - Güncellenmiş -->
+
+<button class="sidebar-toggle" (click)="toggleSidebar()">
     <span>☰</span>
 </button>
 
 <!-- Sidebar Overlay (Mobile) -->
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar-overlay" (click)="toggleSidebar()"></div>
 
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
@@ -24,30 +26,53 @@
             <div class="nav-section-title">Ana Menü</div>
             <ul>
                 <li class="nav-item">
-                    <a routerLink="/projects" routerLinkActive="active" class="nav-link"
-                        (click)="$event.preventDefault()">
+                    <a routerLink="/dashboard" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">🏠</span>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a routerLink="/projects" routerLinkActive="active" class="nav-link"
-                        (click)="$event.preventDefault()">
+                    <a routerLink="/projects" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">📂</span>
                         <span>Projeler</span>
                         <span class="nav-badge">12</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a routerLink="/projects/add" routerLinkActive="active" class="nav-link"
-                        (click)="$event.preventDefault()">
+                    <a routerLink="/tasks" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">📝</span>
                         <span>Görevler</span>
                         <span class="nav-badge warning">48</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/projects/add" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
+                        <span class="nav-icon">➕</span>
+                        <span>Proje Ekle</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="/calendar" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">📅</span>
                         <span>Takvim</span>
                     </a>
@@ -60,20 +85,32 @@
             <div class="nav-section-title">Yönetim</div>
             <ul>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/team-management" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">👥</span>
-                        <span>Takım</span>
+                        <span>Takım Görev Yönetimi</span>
                         <span class="nav-badge success">8</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/users" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">👤</span>
                         <span>Kullanıcılar</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/reports" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">📊</span>
                         <span>Raporlar</span>
                     </a>
@@ -86,20 +123,32 @@
             <div class="nav-section-title">Araçlar</div>
             <ul>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/messages" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">💬</span>
                         <span>Mesajlar</span>
                         <span class="nav-badge">3</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/files" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">📁</span>
                         <span>Dosyalar</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="setActive(this)">
+                    <a routerLink="/settings" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
                         <span class="nav-icon">⚙️</span>
                         <span>Ayarlar</span>
                     </a>
@@ -109,60 +158,3 @@
 
     </nav>
 </div>
-
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('show');
-    }
-
-    function setActive(element) {
-        // Tüm nav-link'lerden active class'ını kaldır
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-
-        // Tıklanan öğeye active class'ı ekle
-        element.classList.add('active');
-
-        // Mobile'da sidebar'ı kapat
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-
-        // Demo için alert
-        const pageName = element.querySelector('span:nth-child(2)').textContent;
-        console.log(`${pageName} sayfasına geçiliyor...`);
-    }
-
-    // Sayfa yüklendiğinde animasyon
-    window.addEventListener('load', function () {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateX(-20px)';
-                item.style.transition = 'all 0.5s ease';
-
-                setTimeout(() => {
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                }, 100);
-            }, index * 80);
-        });
-    });
-
-    // Responsive davranış
-    window.addEventListener('resize', function () {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-
-        if (window.innerWidth > 768) {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('show');
-        }
-    });
-</script>

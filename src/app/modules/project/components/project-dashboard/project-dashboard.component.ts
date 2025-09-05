@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Project } from '../../models/project';
-
-
+import { ProjectService } from '../../services/project-service.service';
 
 interface Stats {
   totalProjects: number;
@@ -22,13 +21,20 @@ interface Stats {
 export class ProjectDashboardComponent implements OnInit {
   
   stats: Stats = {
-    totalProjects: 12,
-    activeTasks: 48,
-    completed: 8,
-    overdue: 2
+    totalProjects: 0,
+    activeTasks: 0,
+    completed: 0,
+    overdue: 0
   };
 
-  projects: Project[] = [
+  projects: Project[] = [];
+  filteredProjects: Project[] = [];
+  activeFilter: string = 'all';
+  isLoading = true;
+  error: string | null = null;
+
+  // Mock data - backend çalışmıyorsa fallback olarak kullanılacak
+  private mockProjects: Project[] = [
     {
       id: 1,
       name: 'E-Ticaret Web Sitesi',
@@ -106,13 +112,111 @@ export class ProjectDashboardComponent implements OnInit {
     }
   ];
 
-  filteredProjects: Project[] = [];
-  activeFilter: string = 'all';
-
-  constructor(private router: Router) {}
+  constructor(private router: Router, private projectService: ProjectService) {}
 
   ngOnInit() {
-    this.filteredProjects = [...this.projects];
+    this.loadProjects();
+  }
+
+  loadProjects() {
+    this.isLoading = true;
+    this.error = null;
+
+    console.log('Backend\'den projeler yükleniyor...');
+    
+    this.projectService.getProjects().subscribe({
+      next: (response) => {
+        console.log('Backend API Response:', response);
+        
+        let backendProjects: Project[] = [];
+        
+        // Backend response formatını kontrol et
+        if (response && Array.isArray(response)) {
+          // Eğer response direkt array ise
+          backendProjects = this.processBackendProjects(response);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Eğer response.data array ise
+          backendProjects = this.processBackendProjects(response.data);
+        } else {
+          console.warn('Beklenmeyen API response formatı:', response);
+        }
+
+        // Backend ve mock verileri birleştir
+        this.combineProjectsData(backendProjects);
+        
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Backend\'den projeler yüklenirken hata:', error);
+        this.error = 'Projeler yüklenirken bir hata oluştu. Mock veriler kullanılıyor.';
+        
+        // Hata durumunda sadece mock data kullan
+        this.projects = [...this.mockProjects];
+        this.applyCurrentFilter();
+        this.calculateStats();
+        
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Backend'den gelen projeleri işle (tarih formatları vs.)
+  private processBackendProjects(backendData: any[]): Project[] {
+    return backendData.map(project => ({
+      ...project,
+      plannedStartDate: project.plannedStartDate ? new Date(project.plannedStartDate) : undefined,
+      plannedEndDate: project.plannedEndDate ? new Date(project.plannedEndDate) : undefined,
+      actualStartDate: project.actualStartDate ? new Date(project.actualStartDate) : undefined,
+      actualEndDate: project.actualEndDate ? new Date(project.actualEndDate) : undefined
+    }));
+  }
+
+  // Backend ve mock verileri birleştir
+  private combineProjectsData(backendProjects: Project[]) {
+    console.log(`Backend\'den ${backendProjects.length} proje alındı`);
+    
+    // Backend verileri ile başla
+    this.projects = [...backendProjects];
+    
+    // Eğer backend'den veri gelmemişse mock verileri ekle
+    if (backendProjects.length === 0) {
+      console.log('Backend\'den veri gelmedi, mock veriler kullanılıyor');
+      this.projects = [...this.mockProjects];
+    } else {
+      // Backend verileri varsa, mock verileri de ekle (farklı ID'lerde)
+      const maxBackendId = Math.max(...backendProjects.map(p => p.id));
+      const mockProjectsWithNewIds = this.mockProjects.map(mockProject => ({
+        ...mockProject,
+        id: maxBackendId + mockProject.id, // ID çakışmasını önle
+        name: `[Mock] ${mockProject.name}` // Mock olduğunu belirt
+      }));
+      
+      this.projects = [...backendProjects, ...mockProjectsWithNewIds];
+      console.log(`Toplam ${this.projects.length} proje yüklendi (${backendProjects.length} backend + ${mockProjectsWithNewIds.length} mock)`);
+    }
+
+    this.applyCurrentFilter();
+    this.calculateStats();
+  }
+
+  // Mevcut filtreyi uygula
+  private applyCurrentFilter() {
+    this.filterProjects(this.activeFilter);
+  }
+
+  // İstatistikleri hesapla
+  private calculateStats() {
+    this.stats = {
+      totalProjects: this.projects.length,
+      activeTasks: this.projects.filter(p => p.status === 'Aktif').length,
+      completed: this.projects.filter(p => p.status === 'Tamamlandı').length,
+      overdue: this.projects.filter(p => p.status === 'Gecikmiş').length
+    };
+  }
+
+  // Verileri yenile
+  refreshProjects() {
+    this.loadProjects();
   }
 
   createNewProject() {
@@ -165,7 +269,7 @@ export class ProjectDashboardComponent implements OnInit {
     const messages: { [key: string]: string } = {
       'active': 'Şu anda aktif olan proje bulunmuyor.',
       'completed': 'Tamamlanmış proje bulunmuyor.',
-      'overdue': 'Geciken proje bulunmuyor. 🎉',
+      'overdue': 'Geciken proje bulunmuyor.',
       'planning': 'Planlama aşamasında proje bulunmuyor.'
     };
     return messages[filter] || 'Proje bulunamadı.';

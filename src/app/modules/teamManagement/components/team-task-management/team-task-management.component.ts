@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { UserTask } from '../../models/userTask';
 import { User } from '../../models/user';
 import { TaskService } from '../../../task/services/task.service';
+import { UserService } from '../../../user/services/user.service';
+import { AssignTaskDto } from '../../../task/models/assignTaskDto';
 
 @Component({
   selector: 'app-team-task-management',
@@ -33,7 +35,7 @@ export class TeamTaskManagementComponent implements OnInit {
   priorityFilter = 'all';
   assigneeFilter = 'all';
 
-  constructor(private fb: FormBuilder, private userTaskService: TaskService) {}
+  constructor(private fb: FormBuilder, private userTaskService: TaskService,private userService:UserService) {}
 
   ngOnInit() {
     this.initializeForm();
@@ -48,7 +50,41 @@ export class TeamTaskManagementComponent implements OnInit {
       notes: ['']
     });
   }
-
+loadTeamMembers() {
+  this.userService.getUsersByDepartment(5).subscribe({
+    next: (response) => {
+      console.log('Team Members API Response:', response);
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        const backendMembers = response.data.map(user => ({
+          ...user,
+          currentWorkload: user.currentWorkload || 0 // Default workload
+        }));
+        
+        // Mock data ile backend data'yı birleştir (duplicate ID'leri önle)
+        const allMembers = [...this.teamMembers];
+        
+        backendMembers.forEach(backendMember => {
+          const existingIndex = allMembers.findIndex(m => m.id === backendMember.id);
+          if (existingIndex !== -1) {
+            // Eğer aynı ID varsa güncelle
+            allMembers[existingIndex] = backendMember;
+          } else {
+            // Yeni üye ekle
+            allMembers.push(backendMember);
+          }
+        });
+        
+        this.teamMembers = allMembers;
+        console.log('Takım üyeleri yüklendi, toplam:', this.teamMembers.length);
+      }
+    },
+    error: (error) => {
+      console.error('Takım üyeleri yüklenirken hata:', error);
+      // Hata durumunda mock data ile devam et
+    }
+  });
+}
   loadData() {
     // Mock takım üyeleri
     this.teamMembers = [
@@ -93,6 +129,7 @@ export class TeamTaskManagementComponent implements OnInit {
         currentWorkload: 40
       }
     ];
+    this.loadTeamMembers();
 
     // Backend'den atanmamış görevleri çek
     this.userTaskService.getUnassignedTasksByDepartmentId(5).subscribe({
@@ -289,37 +326,53 @@ loadAssignedTasks() {
 
   // Görevi kullanıcıya ata
   assignTask() {
-    if (!this.selectedTask || !this.assignTaskForm.valid) {
-      return;
-    }
-
-    const formValue = this.assignTaskForm.value;
-    const assignedUser = this.teamMembers.find(member => member.id === parseInt(formValue.assignedUserId));
-
-    if (assignedUser) {
-      // Görevi atanmış görevlere taşı
-      const updatedTask: UserTask = {
-        ...this.selectedTask,
-        assignedUserId: assignedUser.id,
-        assignedUserName: this.getUserFullName(assignedUser),
-        assignedUser: assignedUser,
-        status: 'To Do',
-        plannedStartDate: formValue.plannedStartDate ? new Date(formValue.plannedStartDate) : this.selectedTask.plannedStartDate,
-        plannedEndDate: formValue.plannedEndDate ? new Date(formValue.plannedEndDate) : this.selectedTask.plannedEndDate,
-        updatedAt: new Date()
-      };
-
-      // Atanmamış görevlerden çıkar
-      this.unassignedTasks = this.unassignedTasks.filter(task => task.id !== this.selectedTask!.id);
-      
-      // Atanmış görevlere ekle
-      this.assignedTasks.push(updatedTask);
-
-      console.log(`Görev "${this.selectedTask.title}" kullanıcı "${assignedUser.firstName} ${assignedUser.lastName}"'e atandı.`);
-      
-      this.closeAssignModal();
-    }
+  if (!this.selectedTask || !this.assignTaskForm.valid) {
+    return;
   }
+
+  const formValue = this.assignTaskForm.value;
+  const assignedUser = this.teamMembers.find(member => member.id === parseInt(formValue.assignedUserId));
+
+  if (assignedUser) {
+    // Backend'e görev atama isteği gönder
+    const assignTaskDto:AssignTaskDto={
+      taskId:this.selectedTask.id,
+      assignedUserId:assignedUser.id
+    };
+    this.userTaskService.assignTaskToUser(assignTaskDto).subscribe({
+      next: (response) => {
+        console.log('Görev atama başarılı:', response);
+        
+        // Frontend'te de güncelleme yap
+        const updatedTask: UserTask = {
+          ...this.selectedTask!,
+          assignedUserId: assignedUser.id,
+          assignedUserName: this.getUserFullName(assignedUser),
+          assignedUser: assignedUser,
+          status: 'To Do',
+          plannedStartDate: formValue.plannedStartDate ? new Date(formValue.plannedStartDate) : this.selectedTask!.plannedStartDate,
+          plannedEndDate: formValue.plannedEndDate ? new Date(formValue.plannedEndDate) : this.selectedTask!.plannedEndDate,
+          updatedAt: new Date()
+        };
+
+        // Atanmamış görevlerden çıkar
+        this.unassignedTasks = this.unassignedTasks.filter(task => task.id !== this.selectedTask!.id);
+        
+        // Atanmış görevlere ekle
+        this.assignedTasks.push(updatedTask);
+
+        console.log(`Görev "${this.selectedTask!.title}" kullanıcı "${assignedUser.firstName} ${assignedUser.lastName}"'e atandı.`);
+        alert('Görev başarıyla atandı!');
+        
+        this.closeAssignModal();
+      },
+      error: (error) => {
+        console.error('Görev atama hatası:', error);
+        alert('Görev atanırken hata oluştu!');
+      }
+    });
+  }
+}
 
   // Görev durumunu güncelle
   updateTaskStatus(task: UserTask, newStatus: string) {
@@ -328,7 +381,15 @@ loadAssignedTasks() {
     
     if (taskIndex !== -1) {
       this.assignedTasks[taskIndex] = updatedTask;
-      console.log(`Görev "${task.title}" durumu "${newStatus}" olarak güncellendi.`);
+      this.userTaskService.updateTaskStatus({ taskId: task.id, status: newStatus }).subscribe({
+        next: (response) => {
+          console.log("Task status updated:", response);
+          console.log(`Görev "${task.title}" durumu "${newStatus}" olarak güncellendi.`);
+        },
+        error: (err) => {
+          console.error("Task status update error:", err);
+        }
+      });
     }
   }
 

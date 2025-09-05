@@ -7,6 +7,6 @@ export const routes: Routes = [
   { path: '', redirectTo: 'projects', pathMatch: 'full' },
   { path: 'projects', component: ProjectDashboardComponent },
   { path: 'projects/add', component: ProjectAddComponent },
-  { path: 'team', component:TeamTaskManagementComponent },
+  { path: 'team-management', component:TeamTaskManagementComponent },
   { path: '**', redirectTo: 'projects' },
 ];
