@@ -1,0 +1,303 @@
+<div class="task-management-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>Takım Görev Yönetimi</h1>
+      <p>Takımınıza atanan görevleri üyelerinize dağıtın ve takip edin</p>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-overview">
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ unassignedTasks.length }}</div>
+        <div class="stat-label">Atanmamış Görev</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👤</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ assignedTasks.length }}</div>
+        <div class="stat-label">Atanmış Görev</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ teamMembers.length }}</div>
+        <div class="stat-label">Takım Üyesi</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-number">{{assignedTasks}}</div>
+        <div class="stat-label">Tamamlanan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Durum:</label>
+      <select [(ngModel)]="statusFilter" class="filter-select">
+        <option value="all">Tümü</option>
+        <option value="To Do">To Do</option>
+        <option value="In Progress">In Progress</option>
+        <option value="In Review/Test">In Review/Test</option>
+        <option value="Blocked">Blocked</option>
+        <option value="Done">Done</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Öncelik:</label>
+      <select [(ngModel)]="priorityFilter" class="filter-select">
+        <option value="all">Tümü</option>
+        <option value="Düşük">Düşük</option>
+        <option value="Orta">Orta</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Kritik">Kritik</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Atanan Kişi:</label>
+      <select [(ngModel)]="assigneeFilter" class="filter-select">
+        <option value="all">Tümü</option>
+        <option *ngFor="let member of teamMembers" [value]="member.id">
+          {{ getUserFullName(member) }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-content-grid">
+    
+    <!-- Atanmamış Görevler -->
+    <div class="section unassigned-section">
+      <div class="section-header">
+        <h2>Atanmamış Görevler</h2>
+        <span class="task-count">{{ getFilteredUnassignedTasks().length }} görev</span>
+      </div>
+      
+      <div class="tasks-list">
+        <div *ngFor="let task of getFilteredUnassignedTasks()" class="task-card unassigned">
+			<div class="task-header">
+				<h3 class="task-title">{{ task.title }}</h3>
+				<div class="task-badges">
+				<span class="priority-badge" [style.background-color]="getPriorityColor(task.priority)">
+					{{ task.priority }}
+				</span>
+				</div>
+			</div>
+			
+			<div class="task-description">{{ task.description }}</div>
+			
+			<div class="task-meta">
+				<div class="meta-item">
+				<span class="meta-label">Proje:</span>
+				<span class="meta-value">{{ task.projectName }}</span> <!-- Backend field -->
+				</div>
+				<div class="meta-item">
+				<span class="meta-label">İş Paketi:</span>
+				<span class="meta-value">{{ task.workPackageName }}</span> <!-- Backend field -->
+				</div>
+				<div class="meta-item">
+				<span class="meta-label">Tahmini Süre:</span>
+				<span class="meta-value">{{ task.estimatedEffort || 0 }} saat</span>
+				</div>
+				<div class="meta-item">
+				<span class="meta-label">Bitiş Tarihi:</span>
+				<span class="meta-value">{{ formatDate(task.plannedEndDate) }}</span>
+				</div>
+			</div>
+			
+			<div class="task-actions">
+				<button class="assign-btn" (click)="openAssignModal(task)">
+				👤 Ata
+				</button>
+			</div>
+	 	</div>
+        
+        <div *ngIf="getFilteredUnassignedTasks().length === 0" class="empty-state">
+          <div class="empty-icon">🎉</div>
+          <h3>Tüm görevler atandı!</h3>
+          <p>Şu anda atanmamış görev bulunmuyor.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atanmış Görevler -->
+    <div class="section assigned-section">
+      <div class="section-header">
+        <h2>Atanmış Görevler</h2>
+        <span class="task-count">{{ getFilteredAssignedTasks().length }} görev</span>
+      </div>
+      
+      <div class="tasks-list">
+        <div *ngFor="let task of getFilteredAssignedTasks()" class="task-card assigned">
+          <div class="task-header">
+            <h3 class="task-title">{{ task.title }}</h3>
+            <div class="task-badges">
+              <span class="status-badge" [style.background-color]="getStatusColor(task.status)">
+                {{ task.status }}
+              </span>
+              <span class="priority-badge" [style.background-color]="getPriorityColor(task.priority)">
+                {{ task.priority }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="task-description">{{ task.description }}</div>
+          
+          <div class="assigned-user">
+            <div class="user-avatar">{{ task.assignedUser?.firstName?.[0] }}{{ task.assignedUser?.lastName?.[0] }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ getUserFullName(task.assignedUser) }}</div>
+              <div class="user-position">{{ task.assignedUser?.position }}</div>
+            </div>
+          </div>
+          
+          <div class="task-progress">
+            <div class="progress-info">
+              <span>İlerleme: {{ task.actualEffort || 0 }}/{{ task.estimatedEffort || 0 }} saat</span>
+              <span class="progress-percentage">
+                {{ task.estimatedEffort ? ((task.actualEffort || 0) / task.estimatedEffort * 100).toFixed(0) : 0 }}%
+              </span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="task.estimatedEffort ? ((task.actualEffort || 0) / task.estimatedEffort * 100) : 0">
+              </div>
+            </div>
+          </div>
+          
+          <div class="task-meta">
+            <div class="meta-item">
+              <span class="meta-label">Başlama:</span>
+              <span class="meta-value">{{ formatDate(task.actualStartDate || task.plannedStartDate) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Bitiş:</span>
+              <span class="meta-value">{{ formatDate(task.plannedEndDate) }}</span>
+            </div>
+          </div>
+          
+			<div class="task-actions">
+				<select class="status-select" 
+						[(ngModel)]="task.status"
+							(ngModelChange)="updateTaskStatus(task, $any($event))">
+					<option value="To Do">To Do</option>
+					<option value="In Progress">In Progress</option>
+					<option value="In Review/Test">In Review/Test</option>
+					<option value="Blocked">Blocked</option>
+					<option value="Done">Done</option>
+				</select>
+			</div>
+        </div>
+        
+        <div *ngIf="getFilteredAssignedTasks().length === 0" class="empty-state">
+          <div class="empty-icon">📝</div>
+          <h3>Henüz atanmış görev yok</h3>
+          <p>Soldaki listeden görevleri takım üyelerinize atayın.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Takım Üyeleri Özeti -->
+  <div class="team-summary">
+    <h2>Takım Üyeleri İş Yükü</h2>
+    <div class="team-members-grid">
+      <div *ngFor="let member of teamMembers" class="member-card">
+        <div class="member-avatar">{{ member.firstName[0] }}{{ member.lastName[0] }}</div>
+        <div class="member-info">
+          <h3>{{ getUserFullName(member) }}</h3>
+          <p>{{ member.position }}</p>
+          <div class="workload-info">
+            <span class="workload-label">İş Yükü:</span>
+            <span class="workload-value" 
+                  [style.color]="getWorkloadStatus(member.currentWorkload).color">
+              {{ member.currentWorkload || 0 }} saat
+            </span>
+            <span class="workload-status" 
+                  [style.color]="getWorkloadStatus(member.currentWorkload).color">
+              ({{ getWorkloadStatus(member.currentWorkload).text }})
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Görev Atama Modal -->
+<div *ngIf="showAssignModal" class="modal-overlay" (click)="closeAssignModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Görev Ata</h2>
+      <button class="close-btn" (click)="closeAssignModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="task-info">
+        <h3>{{ selectedTask?.title }}</h3>
+        <p>{{ selectedTask?.description }}</p>
+        <div class="task-details">
+          <span>Proje: {{ selectedTask?.project?.name }}</span>
+          <span>İş Paketi: {{ selectedTask?.workPackage?.name }}</span>
+          <span>Tahmini Süre: {{ selectedTask?.estimatedEffort || 0 }} saat</span>
+          <span>Öncelik: {{ selectedTask?.priority }}</span>
+        </div>
+      </div>
+      
+      <form [formGroup]="assignTaskForm" (ngSubmit)="assignTask()">
+        <div class="form-group">
+          <label>Atanacak Kişi *</label>
+          <select formControlName="assignedUserId" class="form-control">
+            <option value="">Seçiniz...</option>
+            <option *ngFor="let member of teamMembers" [value]="member.id">
+              {{ getUserFullName(member) }} - {{ member.position }}
+              (İş Yükü: {{ member.currentWorkload || 0 }} saat)
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Başlama Tarihi</label>
+            <input type="date" formControlName="plannedStartDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Bitiş Tarihi</label>
+            <input type="date" formControlName="plannedEndDate" class="form-control">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Notlar</label>
+          <textarea formControlName="notes" 
+                    class="form-control" 
+                    rows="3" 
+                    placeholder="Görev hakkında özel notlarınız..."></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeAssignModal()">
+            İptal
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!assignTaskForm.valid">
+            Ata
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

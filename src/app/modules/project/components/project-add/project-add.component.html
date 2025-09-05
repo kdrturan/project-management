@@ -1,0 +1,154 @@
+<div class="main-content">
+  <div class="container">
+    <div class="header">
+      <h1>Yeni Proje Oluştur</h1>
+      <p>Projenizi oluşturmak için formu doldurun</p>
+    </div>
+
+    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+      <div class="content">
+        <div class="form-section">
+          <h2>Proje Detayları</h2>
+          
+          <div class="form-group">
+            <label>Proje Adı <span class="required">*</span></label>
+            <input type="text" formControlName="name" class="form-control" placeholder="Projenizin adını girin">
+          </div>
+
+          <div class="form-group">
+            <label>Proje Açıklaması</label>
+            <textarea formControlName="description" class="form-control" rows="4" placeholder="Projeniz hakkında detaylı açıklama yazın..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Proje Dosyaları</label>
+            <div class="file-upload-area" (click)="fileInput.click()">
+              <div class="upload-icon">📎</div>
+              <div class="upload-text">
+                <strong>Dosyaları buraya sürükleyin</strong><br>
+                <span>veya tıklayarak seçin</span>
+              </div>
+              <div class="upload-info">PDF, DOC, XLS, PNG, JPG (Max: 10MB)</div>
+            </div>
+            <input #fileInput type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
+                   style="display: none;" (change)="onFileSelected($event)">
+            
+            <div class="file-list" *ngIf="uploadedFiles.length > 0">
+              <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+                <div class="file-info">
+                  <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                  <div class="file-details">
+                    <div class="file-name">{{ file.name }}</div>
+                    <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                  </div>
+                </div>
+                <button type="button" class="file-remove" (click)="removeFile(i)">×</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Başlangıç Tarihi</label>
+              <input type="date" formControlName="plannedStartDate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Bitiş Tarihi</label>
+              <input type="date" formControlName="plannedEndDate" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Öncelik Seviyesi</label>
+            <select formControlName="priority" class="form-control">
+              <option *ngFor="let priority of priorities" [value]="priority.value">
+                {{ priority.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Bütçe (₺)</label>
+            <input type="number" formControlName="budget" class="form-control" placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label>Proje Şablonu Seçin</label>
+            <div class="project-templates">
+              <div *ngFor="let template of templates" 
+                   class="template-card" 
+                   [class.selected]="selectedTemplate === template.id"
+                   (click)="selectTemplate(template.id)">
+                <span class="template-icon">{{ template.icon }}</span>
+                <h4>{{ template.name }}</h4>
+                <p>{{ template.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-card">
+            <h3>📋 Proje Özeti</h3>
+            
+            <div class="preview-item">
+              <span class="preview-label">Proje Adı:</span>
+              <span class="preview-value">{{ projectForm.get('name')?.value || 'Proje Adı Girilmedi' }}</span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Açıklama:</span>
+              <span class="preview-value description">
+                {{ (projectForm.get('description')?.value || 'Açıklama girilmedi').substring(0, 50) + '...' }}
+              </span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Dosya Sayısı:</span>
+              <span class="preview-value">{{ uploadedFiles.length }} dosya</span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Başlangıç:</span>
+              <span class="preview-value">{{ formatDate(projectForm.get('plannedStartDate')?.value) }}</span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Bitiş:</span>
+              <span class="preview-value">{{ formatDate(projectForm.get('plannedEndDate')?.value) }}</span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Süre:</span>
+              <span class="preview-value">{{ calculateDuration() }}</span>
+            </div>
+            
+            <div class="preview-item">
+              <span class="preview-label">Bütçe:</span>
+              <span class="preview-value">{{ formatCurrency(projectForm.get('budget')?.value) }}</span>
+            </div>
+            
+            <!-- <div class="preview-item">
+              <span class="preview-label">Öncelik:</span>
+              <span class="preview-value" [style.color]="getPriorityColor()">
+                {{ priorities.find(p => p.value === projectForm.get('priority')?.value)?.label }}
+              </span>
+            </div> -->
+            
+            <div class="preview-item">
+              <span class="preview-label">Şablon:</span>
+              <span class="preview-value">{{ getSelectedTemplate()?.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button type="submit" class="btn btn-primary">
+          <span style="margin-right: 8px;">✓</span>
+          Projeyi Oluştur
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

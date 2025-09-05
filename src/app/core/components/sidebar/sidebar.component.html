@@ -1,0 +1,168 @@
+<button class="sidebar-toggle" onclick="toggleSidebar()">
+    <span>☰</span>
+</button>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <a href="#" class="sidebar-brand">
+            <div class="brand-icon">📊</div>
+            <span>ProjeYönetim</span>
+        </a>
+        <div class="sidebar-subtitle">Proje Takip Sistemi</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+
+        <!-- Ana Menü -->
+        <div class="nav-section">
+            <div class="nav-section-title">Ana Menü</div>
+            <ul>
+                <li class="nav-item">
+                    <a routerLink="/projects" routerLinkActive="active" class="nav-link"
+                        (click)="$event.preventDefault()">
+                        <span class="nav-icon">🏠</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="/projects" routerLinkActive="active" class="nav-link"
+                        (click)="$event.preventDefault()">
+                        <span class="nav-icon">📂</span>
+                        <span>Projeler</span>
+                        <span class="nav-badge">12</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="/projects/add" routerLinkActive="active" class="nav-link"
+                        (click)="$event.preventDefault()">
+                        <span class="nav-icon">📝</span>
+                        <span>Görevler</span>
+                        <span class="nav-badge warning">48</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">📅</span>
+                        <span>Takvim</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Yönetim -->
+        <div class="nav-section">
+            <div class="nav-section-title">Yönetim</div>
+            <ul>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">👥</span>
+                        <span>Takım</span>
+                        <span class="nav-badge success">8</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">👤</span>
+                        <span>Kullanıcılar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">📊</span>
+                        <span>Raporlar</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Araçlar -->
+        <div class="nav-section">
+            <div class="nav-section-title">Araçlar</div>
+            <ul>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">💬</span>
+                        <span>Mesajlar</span>
+                        <span class="nav-badge">3</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">📁</span>
+                        <span>Dosyalar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="setActive(this)">
+                        <span class="nav-icon">⚙️</span>
+                        <span>Ayarlar</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </nav>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+    }
+
+    function setActive(element) {
+        // Tüm nav-link'lerden active class'ını kaldır
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Tıklanan öğeye active class'ı ekle
+        element.classList.add('active');
+
+        // Mobile'da sidebar'ı kapat
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
+
+        // Demo için alert
+        const pageName = element.querySelector('span:nth-child(2)').textContent;
+        console.log(`${pageName} sayfasına geçiliyor...`);
+    }
+
+    // Sayfa yüklendiğinde animasyon
+    window.addEventListener('load', function () {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(-20px)';
+                item.style.transition = 'all 0.5s ease';
+
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                }, 100);
+            }, index * 80);
+        });
+    });
+
+    // Responsive davranış
+    window.addEventListener('resize', function () {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+    });
+</script>

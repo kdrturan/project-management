@@ -1,0 +1,168 @@
+<nav class="navbar">
+    <div class="navbar-brand">
+        ProjeYönetim
+    </div>
+    <div class="user-info">
+        <span>Merhaba, Ahmet</span>
+        <div class="user-avatar">AY</div>
+    </div>
+</nav>
+
+<!-- Dashboard Container -->
+<div class="dashboard-container">
+    
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-info">
+            <h1>Dashboard</h1>
+            <p>Projelerinizi ve ilerleme durumlarını takip edin</p>
+        </div>
+        <button class="create-project-btn" (click)="createNewProject()">
+            <span>➕</span>
+            Yeni Proje Oluştur
+        </button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.totalProjects }}</div>
+                    <div class="stat-label">Toplam Proje</div>
+                </div>
+                <div class="stat-icon projects">📁</div>
+            </div>
+            <div class="stat-change positive">↗ +2 bu ay</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.activeTasks }}</div>
+                    <div class="stat-label">Aktif Görev</div>
+                </div>
+                <div class="stat-icon tasks">📝</div>
+            </div>
+            <div class="stat-change positive">↗ +12 bu hafta</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.completed }}</div>
+                    <div class="stat-label">Tamamlanan</div>
+                </div>
+                <div class="stat-icon completed">✅</div>
+            </div>
+            <div class="stat-change positive">↗ +3 bu ay</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.overdue }}</div>
+                    <div class="stat-label">Geciken</div>
+                </div>
+                <div class="stat-icon overdue">⚠️</div>
+            </div>
+            <div class="stat-change negative">↗ +1 bu hafta</div>
+        </div>
+    </div>
+
+    <!-- Projects Section -->
+    <div class="projects-section">
+        <div class="section-header">
+            <h2 class="section-title">Projelerim</h2>
+            <div class="filter-tabs">
+                <button 
+                    class="filter-tab" 
+                    [class.active]="activeFilter === 'all'"
+                    (click)="filterProjects('all')">
+                    Tümü
+                </button>
+                <button 
+                    class="filter-tab" 
+                    [class.active]="activeFilter === 'active'"
+                    (click)="filterProjects('active')">
+                    Aktif
+                </button>
+                <button 
+                    class="filter-tab" 
+                    [class.active]="activeFilter === 'completed'"
+                    (click)="filterProjects('completed')">
+                    Tamamlanan
+                </button>
+                <button 
+                    class="filter-tab" 
+                    [class.active]="activeFilter === 'overdue'"
+                    (click)="filterProjects('overdue')">
+                    Geciken
+                </button>
+                <button 
+                    class="filter-tab" 
+                    [class.active]="activeFilter === 'planning'"
+                    (click)="filterProjects('planning')">
+                    Planlama
+                </button>
+            </div>
+        </div>
+
+        <div class="projects-grid">
+            
+            <!-- Projeler -->
+            <div 
+                *ngFor="let project of filteredProjects" 
+                class="project-card" 
+                [attr.data-status]="project.status"
+                (click)="openProject(project)">
+                
+                <div class="project-header">
+                    <div>
+                        <div class="project-title">{{ project.name }}</div>
+                        <div class="project-description">{{ project.description }}</div>
+                    </div>
+                    <span class="project-status" [ngClass]="getStatusClass(project.status)">
+                        {{ project.status || 'Belirsiz' }}
+                    </span>
+                </div>
+                
+                <div class="project-progress">
+                    <div class="progress-header">
+                        <span class="progress-label">İlerleme</span>
+                        <span class="progress-percentage">{{ project.progressPercentage || 0 }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="project.progressPercentage || 0"></div>
+                    </div>
+                </div>
+                
+                <div class="project-meta">
+                    <div class="project-team">
+                        <span>👥</span>
+                        <div class="team-avatars">
+                            <div 
+                                *ngFor="let member of getProjectTeam(project.id)" 
+                                class="team-avatar">
+                                {{ member }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-deadline">
+                        <span>📅</span>
+                        <span>{{ formatDate(project.plannedEndDate) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="filteredProjects.length === 0 && activeFilter !== 'all'" class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>Bu kategoride proje bulunamadı</h3>
+                <p>{{ getFilterMessage(activeFilter) }}</p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
