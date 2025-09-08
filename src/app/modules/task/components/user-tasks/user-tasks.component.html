@@ -1,0 +1,191 @@
+<div class="my-tasks-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>Görevlerim</h1>
+      <p *ngIf="currentUser">Merhaba {{ currentUser.firstName }} {{ currentUser.lastName }}, size atanan görevleri buradan takip edebilirsiniz</p>
+    </div>
+  </div>
+
+  <!-- Stats Dashboard -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">📊</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">Toplam Görev</div>
+      </div>
+    </div>
+    
+    <div class="stat-card todo">
+      <div class="stat-icon">📋</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.todo }}</div>
+        <div class="stat-label">Yapılacak</div>
+      </div>
+    </div>
+    
+    <div class="stat-card progress">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.inProgress }}</div>
+        <div class="stat-label">Devam Eden</div>
+      </div>
+    </div>
+    
+    <div class="stat-card review">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.inReview }}</div>
+        <div class="stat-label">İnceleme</div>
+      </div>
+    </div>
+    
+    <div class="stat-card blocked">
+      <div class="stat-icon">🚫</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.blocked }}</div>
+        <div class="stat-label">Engelli</div>
+      </div>
+    </div>
+    
+    <div class="stat-card done">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-number">{{ stats.done }}</div>
+        <div class="stat-label">Tamamlanan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Durum Filtresi:</label>
+      <select [(ngModel)]="statusFilter" class="filter-select">
+        <option value="all">Tümü</option>
+        <option value="To Do">Yapılacak</option>
+        <option value="In Progress">Devam Eden</option>
+        <option value="In Review/Test">İnceleme/Test</option>
+        <option value="Blocked">Engelli</option>
+        <option value="Done">Tamamlanan</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Öncelik Filtresi:</label>
+      <select [(ngModel)]="priorityFilter" class="filter-select">
+        <option value="all">Tümü</option>
+        <option value="Düşük">Düşük</option>
+        <option value="Orta">Orta</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Kritik">Kritik</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tasks List -->
+  <div class="tasks-section">
+    <div class="section-header">
+      <h2>Görev Listesi</h2>
+      <span class="task-count">{{ getFilteredTasks().length }} görev</span>
+    </div>
+    
+    <div class="tasks-grid">
+      <div *ngFor="let task of getFilteredTasks()" class="task-card" 
+           [class.overdue]="isOverdue(task)"
+           [class.completed]="task.status === 'Done'">
+        
+        <div class="task-content">
+          <!-- Task Header -->
+          <div class="task-header">
+            <h3 class="task-title">{{ task.title }}</h3>
+            <div class="task-badges">
+              <span class="status-badge" 
+                    [style.background-color]="getStatusColor(task.status)">
+                {{ task.status }}
+              </span>
+              <span class="priority-badge" 
+                    [style.background-color]="getPriorityColor(task.priority)">
+                {{ task.priority }}
+              </span>
+              <span *ngIf="isOverdue(task)" class="overdue-badge">
+                Gecikmiş
+              </span>
+            </div>
+          </div>
+
+          <!-- Task Description -->
+          <div class="task-description">{{ task.description }}</div>
+
+          <!-- Task Progress -->
+          <div class="task-progress" *ngIf="task.estimatedEffort">
+            <div class="progress-info">
+              <span>İlerleme: {{ task.actualEffort || 0 }}/{{ task.estimatedEffort }} saat</span>
+              <span class="progress-percentage">{{ getProgressPercentage(task) }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getProgressPercentage(task)"></div>
+            </div>
+          </div>
+
+          <!-- Task Meta Info -->
+          <div class="task-meta">
+            <div class="meta-row">
+              <div class="meta-item">
+                <span class="meta-label">Proje:</span>
+                <span class="meta-value">{{ task.projectName }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">İş Paketi:</span>
+                <span class="meta-value">{{ task.workPackageName }}</span>
+              </div>
+            </div>
+            
+            <div class="meta-row">
+              <div class="meta-item">
+                <span class="meta-label">Başlama:</span>
+                <span class="meta-value">{{ formatDate(task.actualStartDate || task.plannedStartDate) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Bitiş:</span>
+                <span class="meta-value">{{ formatDate(task.plannedEndDate) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Actions -->
+        <div class="task-actions">
+          <div class="status-update">
+            <label>Durum Güncelle:</label>
+            <select [(ngModel)]="task.status" 
+                    (ngModelChange)="updateTaskStatus(task, $event)"
+                    class="status-select">
+              <option value="To Do">Yapılacak</option>
+              <option value="In Progress">Devam Eden</option>
+              <option value="In Review/Test">İnceleme/Test</option>
+              <option value="Blocked">Engelli</option>
+              <option value="Done">Tamamlanan</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="getFilteredTasks().length === 0" class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>Görev bulunamadı</h3>
+        <p *ngIf="statusFilter !== 'all' || priorityFilter !== 'all'">
+          Seçilen filtrelere uygun görev bulunmuyor.
+        </p>
+        <p *ngIf="statusFilter === 'all' && priorityFilter === 'all'">
+          Henüz size atanmış görev bulunmuyor.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>

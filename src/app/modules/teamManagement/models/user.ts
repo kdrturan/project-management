@@ -4,6 +4,7 @@ export interface User {
   lastName: string;
   email: string;
   position?: string;
+  role: string;
   departmentId?: number;
   isActive: boolean;
   currentWorkload?: number;

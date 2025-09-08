@@ -283,3 +283,38 @@
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: rgba(255,255,255,0.5);
         }
+
+        .logout-link {
+  color: rgba(255,255,255,0.8) !important;
+  transition: all 0.3s ease;
+}
+
+.logout-link:hover {
+  color: #ff6b6b !important; /* Çıkış için kırmızımsı renk */
+  background: rgba(255, 107, 107, 0.1) !important;
+  transform: translateX(5px);
+}
+
+.logout-link .nav-icon {
+  color: #ff6b6b;
+}
+
+/* Alternatif olarak, logout'u sidebar'ın en altına yerleştirmek için */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px); /* Header yüksekliğini çıkar */
+}
+
+.nav-section:last-child {
+  margin-top: auto; /* Son section'ı alta it */
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 20px;
+}
+
+/* Responsive düzenlemede logout butonu */
+@media (max-width: 767px) {
+  .logout-link {
+    margin-bottom: 20px;
+  }
+}

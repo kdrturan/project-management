@@ -1,0 +1,129 @@
+<!-- login.component.html -->
+<div class="login-container">
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="brand-section">
+        <div class="brand-icon">📊</div>
+        <h1>ProjeYönetim</h1>
+        <p class="brand-subtitle">Proje Takip Sistemi</p>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="email" class="form-label">E-posta</label>
+        <div class="input-group">
+          <span class="input-icon">👤</span>
+          <input 
+            type="email" 
+            id="email" 
+            name="email"
+            [(ngModel)]="loginData.email"
+            #email="ngModel"
+            required
+            email
+            class="form-input"
+            placeholder="E-posta adresinizi girin"
+            [class.error]="email.invalid && email.touched">
+        </div>
+        <div class="error-message" *ngIf="email.invalid && email.touched">
+          <span *ngIf="email.errors?.['required']">E-posta adresi gereklidir</span>
+          <span *ngIf="email.errors?.['email']">Geçerli bir e-posta adresi girin</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Şifre</label>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="password" 
+            name="password"
+            [(ngModel)]="loginData.password"
+            #password="ngModel"
+            required
+            minlength="6"
+            class="form-input"
+            placeholder="Şifrenizi girin"
+            [class.error]="password.invalid && password.touched">
+          <button 
+            type="button" 
+            class="password-toggle"
+            (click)="togglePassword()">
+            <span>{{ showPassword ? '🙈' : '👁️' }}</span>
+          </button>
+        </div>
+        <div class="error-message" *ngIf="password.invalid && password.touched">
+          <span *ngIf="password.errors?.['required']">Şifre gereklidir</span>
+          <span *ngIf="password.errors?.['minlength']">Şifre en az 6 karakter olmalıdır</span>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-container">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="rememberMe"
+            name="rememberMe">
+          <span class="checkmark"></span>
+          Beni Hatırla
+        </label>
+        <a href="#" class="forgot-password" (click)="onForgotPassword($event)">
+          Şifremi Unuttum?
+        </a>
+      </div>
+
+      <button 
+        type="submit" 
+        class="login-button"
+        [disabled]="loginForm.invalid || isLoading"
+        [class.loading]="isLoading">
+        <span *ngIf="!isLoading">Giriş Yap</span>
+        <span *ngIf="isLoading" class="loading-spinner">⏳</span>
+      </button>
+
+      <!-- Error/Success Messages -->
+      <div class="message error-message-global" *ngIf="errorMessage">
+        <span class="message-icon">⚠️</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="message success-message" *ngIf="successMessage">
+        <span class="message-icon">✅</span>
+        <span>{{ successMessage }}</span>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>Hesabınız yok mu? 
+        <a href="#" (click)="onRegister($event)" class="register-link">
+          Kayıt Ol
+        </a>
+      </p>
+      
+      <div class="demo-credentials" *ngIf="showDemoCredentials">
+        <h4>Demo Hesap Bilgileri:</h4>
+        <div class="demo-item">
+          <strong>Admin:</strong> admin&#64;example.com / admin123
+          <button (click)="fillDemoCredentials('admin')" class="demo-fill-btn">Kullan</button>
+        </div>
+        <div class="demo-item">
+          <strong>Kullanıcı:</strong> user&#64;example.com / user123
+          <button (click)="fillDemoCredentials('user')" class="demo-fill-btn">Kullan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Animation -->
+  <div class="background-animation">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+    <div class="floating-shape shape-4"></div>
+  </div>
+</div>

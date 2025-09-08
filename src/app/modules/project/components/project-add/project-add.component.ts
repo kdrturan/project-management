@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'; // NgIf, NgFor için gerekli
 import { ProjectService } from '../../services/project-service.service';
 import { ProjectDto } from '../../models/projectDto';
+import { AuthService } from '../../../../core/services/auth.service';
 
 
 @Component({
@@ -32,7 +33,7 @@ export class ProjectAddComponent implements OnInit {
     { value: 'critical', label: 'Kritik', color: '#9c27b0' }
   ];
 
-  constructor(private fb: FormBuilder,private projectService:ProjectService) {}
+  constructor(private fb: FormBuilder,private projectService:ProjectService, private authService:AuthService) {}
 
   ngOnInit() {
     this.projectForm = this.fb.group({
@@ -132,6 +133,7 @@ onSubmit(): void {
     plannedStartDate: new Date(formValue.plannedStartDate), // ✅ Doğru - eskiden startDate yazıyordu
     plannedEndDate: new Date(formValue.plannedEndDate), // ✅ Doğru - eskiden endDate yazıyordu
     priority: formValue.priority,
+    projectManagerId: this.authService.getCurrentUserId() || undefined
   };
 
   console.log('Gönderilecek Project DTO:', newProject);

@@ -11,7 +11,7 @@ export class UserService {
 
   constructor(private httpClient:HttpClient) { }
 
-  apiUrl = 'https://localhost:7041/api/Users';
+  apiUrl = 'http://localhost:7041/api/Users';
 
   getUsers():Observable<ListResponseModel<User>>{
     return this.httpClient.get<ListResponseModel<User>>(this.apiUrl);

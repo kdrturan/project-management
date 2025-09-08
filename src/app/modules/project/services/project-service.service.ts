@@ -12,7 +12,7 @@ import { ListResponseModel } from '../../../core/models/listResponseModel';
 export class ProjectService {
 
   constructor(private httpClient:HttpClient) { }
-  apiUrl=  "https://localhost:7041"
+  apiUrl=  "http://localhost:7041"
 
 
 
@@ -23,6 +23,12 @@ addProject(project: ProjectDto): Observable<ResponseModel> {
 
   getProjects():Observable<ListResponseModel<Project[]>>{
     const newUrl = this.apiUrl + "/api/Projects";
+    return this.httpClient.get<ListResponseModel<Project[]>>(newUrl);
+  }
+
+
+    getProjectsByOwner(managerId:number):Observable<ListResponseModel<Project[]>>{
+    const newUrl = this.apiUrl + "/api/Projects/getbymanagerid?id=" + managerId;
     return this.httpClient.get<ListResponseModel<Project[]>>(newUrl);
   }
 }

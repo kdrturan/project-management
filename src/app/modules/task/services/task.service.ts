@@ -5,52 +5,56 @@ import { ListResponseModel } from '../../../core/models/listResponseModel';
 import { UserTask } from '../../teamManagement/models/userTask';
 import { ResponseModel } from '../../../core/models/responseModel';
 import { AssignTaskDto } from '../models/assignTaskDto';
-import { UpdateTaskStatusDto} from '../models/updateStautsTaskDto';
+import { UpdateTaskStatusDto } from '../models/updateStautsTaskDto';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TaskService {
+  constructor(private httpClient: HttpClient) {}
 
-  constructor(private httpClient:HttpClient) { }
+  apiUrl = 'http://localhost:7041/api/Tasks';
 
-  apiUrl = 'https://localhost:7041/api/Tasks';
-
-  getUnassignedTasks():Observable<ListResponseModel<UserTask>>{
-    const newUrl = this.apiUrl + "/GetUnassignedTasks";
+  getUnassignedTasks(): Observable<ListResponseModel<UserTask>> {
+    const newUrl = this.apiUrl + '/GetUnassignedTasks';
     return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);
   }
 
-
-  getAssignedTasks():Observable<ListResponseModel<UserTask>>{
-    const newUrl = this.apiUrl + "/GetAssignedTasks";
+  getAssignedTasks(): Observable<ListResponseModel<UserTask>> {
+    const newUrl = this.apiUrl + '/GetAssignedTasks';
     return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);
   }
 
-
-  getAssignedTasksByDepartmentId(id:number):Observable<ListResponseModel<UserTask>>{
-    const newUrl = this.apiUrl + "/GetAssignedTasksByDepartment?id=" + id;
+  getAssignedTasksByDepartmentId(
+    id: number
+  ): Observable<ListResponseModel<UserTask>> {
+    const newUrl = this.apiUrl + '/GetAssignedTasksByDepartment?id=' + id;
     return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);
   }
 
-
-  getUnassignedTasksByDepartmentId(id:number):Observable<ListResponseModel<UserTask>>{
-    const newUrl = this.apiUrl + "/GetUnassignedTasksByDepartment?id=" + id;
+  getUnassignedTasksByDepartmentId(
+    id: number
+  ): Observable<ListResponseModel<UserTask>> {
+    const newUrl = this.apiUrl + '/GetUnassignedTasksByDepartment?id=' + id;
     return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);
   }
 
-
-  updateTaskStatus(updateTaskStatus:UpdateTaskStatusDto): Observable<ResponseModel> {
-    const newUrl = this.apiUrl + "/UpdateTaskStatus"
+  updateTaskStatus(
+    updateTaskStatus: UpdateTaskStatusDto
+  ): Observable<ResponseModel> {
+    const newUrl = this.apiUrl + '/UpdateTaskStatus';
     return this.httpClient.put<ResponseModel>(newUrl, updateTaskStatus);
   }
 
-
-
-  assignTaskToUser(assignTaskDto:AssignTaskDto): Observable<ResponseModel> {
-    const newUrl = this.apiUrl + "/AssignTask"
-        console.log("TaskId:",assignTaskDto.taskId);
+  assignTaskToUser(assignTaskDto: AssignTaskDto): Observable<ResponseModel> {
+    const newUrl = this.apiUrl + '/AssignTask';
+    console.log('TaskId:', assignTaskDto.taskId);
 
     return this.httpClient.put<ResponseModel>(newUrl, assignTaskDto);
+  }
+
+  getTasksByUserId(id: number): Observable<ListResponseModel<UserTask>> {
+    const newUrl = this.apiUrl + '/GetTasksByUserId?id=' + id;
+    return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);
   }
 }

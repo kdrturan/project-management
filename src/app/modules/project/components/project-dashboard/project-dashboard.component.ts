@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Project } from '../../models/project';
 import { ProjectService } from '../../services/project-service.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface Stats {
   totalProjects: number;
@@ -112,7 +113,7 @@ export class ProjectDashboardComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router, private projectService: ProjectService) {}
+  constructor(private router: Router, private projectService: ProjectService, private authService:AuthService) {}
 
   ngOnInit() {
     this.loadProjects();
@@ -123,8 +124,8 @@ export class ProjectDashboardComponent implements OnInit {
     this.error = null;
 
     console.log('Backend\'den projeler yükleniyor...');
-    
-    this.projectService.getProjects().subscribe({
+    let userId = this.authService.getCurrentUserId() || 0;
+    this.projectService.getProjectsByOwner(userId).subscribe({
       next: (response) => {
         console.log('Backend API Response:', response);
         

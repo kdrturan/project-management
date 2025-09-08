@@ -47,7 +47,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a routerLink="/tasks" 
+                    <a routerLink="/user-tasks" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
                        class="nav-link"
@@ -123,14 +123,11 @@
             <div class="nav-section-title">Araçlar</div>
             <ul>
                 <li class="nav-item">
-                    <a routerLink="/messages" 
-                       routerLinkActive="active" 
-                       [routerLinkActiveOptions]="{exact: true}"
-                       class="nav-link"
-                       (click)="onNavClick()">
-                        <span class="nav-icon">💬</span>
-                        <span>Mesajlar</span>
-                        <span class="nav-badge">3</span>
+                    <a href="#" 
+                    class="nav-link logout-link"
+                    (click)="onLogout($event)">
+                        <span class="nav-icon">🚪</span>
+                        <span>Çıkış Yap</span>
                     </a>
                 </li>
                 <li class="nav-item">

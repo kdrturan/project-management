@@ -91,6 +91,7 @@ loadTeamMembers() {
       {
         id: 1,
         firstName: 'Ahmet',
+        role:"user",
         lastName: 'Yılmaz',
         email: 'ahmet.yilmaz@company.com',
         position: 'Senior Developer',
@@ -101,6 +102,7 @@ loadTeamMembers() {
       {
         id: 2,
         firstName: 'Mehmet',
+                role:"user",
         lastName: 'Kaya',
         email: 'mehmet.kaya@company.com',
         position: 'Frontend Developer',
@@ -111,6 +113,7 @@ loadTeamMembers() {
       {
         id: 3,
         firstName: 'Selin',
+                role:"user",
         lastName: 'Başak',
         email: 'selin.basak@company.com',
         position: 'QA Engineer',
@@ -121,6 +124,7 @@ loadTeamMembers() {
       {
         id: 4,
         firstName: 'Emre',
+                role:"user",
         lastName: 'Koç',
         email: 'emre.koc@company.com',
         position: 'DevOps Engineer',
