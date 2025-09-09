@@ -1,4 +1,4 @@
-<!-- sidebar.component.html - Güncellenmiş -->
+<!-- sidebar.component.html - Role-based navigation -->
 
 <button class="sidebar-toggle" (click)="toggleSidebar()">
     <span>☰</span>
@@ -15,27 +15,27 @@
             <div class="brand-icon">📊</div>
             <span>ProjeYönetim</span>
         </a>
-        <div class="sidebar-subtitle">Proje Takip Sistemi</div>
+        <div class="user-profile-card" *ngIf="currentUser">
+            <div class="user-avatar">
+                {{ currentUser.firstName.charAt(0) }}{{ currentUser.lastName.charAt(0) }}
+            </div>
+            <div class="user-details">
+                <div class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</div>
+                <div class="user-position" *ngIf="currentUser.role">
+                    {{ currentUser.role }}
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Navigation -->
     <nav class="sidebar-nav">
 
-        <!-- Ana Menü -->
-        <div class="nav-section">
-            <div class="nav-section-title">Ana Menü</div>
+        <!-- Ana Menü - Sadece ProjectManager ve Admin görebilir -->
+        <div class="nav-section" *ngIf="shouldShowMainMenu()">
+            <div class="nav-section-title">Proje Yönetim</div>
             <ul>
-                <li class="nav-item">
-                    <a routerLink="/dashboard" 
-                       routerLinkActive="active" 
-                       [routerLinkActiveOptions]="{exact: true}"
-                       class="nav-link"
-                       (click)="onNavClick()">
-                        <span class="nav-icon">🏠</span>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
+                <li class="nav-item" *ngIf="canAccessProjects()">
                     <a routerLink="/projects" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -46,18 +46,7 @@
                         <span class="nav-badge">12</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a routerLink="/user-tasks" 
-                       routerLinkActive="active" 
-                       [routerLinkActiveOptions]="{exact: true}"
-                       class="nav-link"
-                       (click)="onNavClick()">
-                        <span class="nav-icon">📝</span>
-                        <span>Görevler</span>
-                        <span class="nav-badge warning">48</span>
-                    </a>
-                </li>
-                <li class="nav-item">
+                <li class="nav-item" *ngIf="canAccessProjects()">
                     <a routerLink="/projects/add" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -67,7 +56,7 @@
                         <span>Proje Ekle</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item" *ngIf="isProjectManager()">
                     <a routerLink="/calendar" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -76,15 +65,30 @@
                         <span class="nav-icon">📅</span>
                         <span>Takvim</span>
                     </a>
+                </li> -->
+            </ul>
+        </div>
+        <div class="nav-section" *ngIf="shouldShowTasksMenu()">
+            <div class="nav-section-title">Görevler</div>
+            <ul>
+                <li class="nav-item">
+                    <a routerLink="/user-tasks" 
+                       routerLinkActive="active" 
+                       [routerLinkActiveOptions]="{exact: true}"
+                       class="nav-link"
+                       (click)="onNavClick()">
+                        <span class="nav-icon">📝</span>
+                        <span>Görevlerim</span>
+                        <span class="nav-badge warning">48</span>
+                    </a>
                 </li>
             </ul>
         </div>
 
-        <!-- Yönetim -->
-        <div class="nav-section">
+        <div class="nav-section" *ngIf="shouldShowManagementMenu()">
             <div class="nav-section-title">Yönetim</div>
             <ul>
-                <li class="nav-item">
+                <li class="nav-item" *ngIf="canAccessTeamManagement()">
                     <a routerLink="/team-management" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -95,7 +99,7 @@
                         <span class="nav-badge success">8</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item" *ngIf="canAccessUserManagement()">
                     <a routerLink="/users" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -105,7 +109,7 @@
                         <span>Kullanıcılar</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item" *ngIf="canAccessReports()">
                     <a routerLink="/reports" 
                        routerLinkActive="active" 
                        [routerLinkActiveOptions]="{exact: true}"
@@ -114,18 +118,18 @@
                         <span class="nav-icon">📊</span>
                         <span>Raporlar</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
         </div>
 
-        <!-- Araçlar -->
-        <div class="nav-section">
+        <!-- Araçlar - Herkese görünür -->
+        <div class="nav-section" *ngIf="shouldShowToolsMenu()">
             <div class="nav-section-title">Araçlar</div>
             <ul>
                 <li class="nav-item">
                     <a href="#" 
-                    class="nav-link logout-link"
-                    (click)="onLogout($event)">
+                       class="nav-link logout-link"
+                       (click)="onLogout($event)">
                         <span class="nav-icon">🚪</span>
                         <span>Çıkış Yap</span>
                     </a>
@@ -140,18 +144,7 @@
                         <span>Dosyalar</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a routerLink="/settings" 
-                       routerLinkActive="active" 
-                       [routerLinkActiveOptions]="{exact: true}"
-                       class="nav-link"
-                       (click)="onNavClick()">
-                        <span class="nav-icon">⚙️</span>
-                        <span>Ayarlar</span>
-                    </a>
-                </li>
             </ul>
         </div>
-
     </nav>
 </div>

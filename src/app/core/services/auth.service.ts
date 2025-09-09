@@ -5,6 +5,8 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { User } from '../../modules/teamManagement/models/user';
+import { ResponseModel } from '../models/responseModel';
+import { DataResponseModel } from '../models/dataResponseModel';
 
 interface LoginRequest {
   email: string;
@@ -12,11 +14,7 @@ interface LoginRequest {
   rememberMe?: boolean;
 }
 
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  user?: User;
-}
+
 
 @Injectable({
   providedIn: 'root',
@@ -33,15 +31,15 @@ export class AuthService {
   }
 
   // Login - Cookie tabanlı
-  login(credentials: LoginRequest): Observable<LoginResponse> {
+  login(credentials: LoginRequest): Observable<DataResponseModel<User>> {
     return this.http
-      .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials, {
+      .post<DataResponseModel<User>>(`${this.apiUrl}/auth/login`, credentials, {
         withCredentials: true, // Cookie'leri gönder/al
       })
       .pipe(
         map((response) => {
-          if (response.success && response.user) {
-            this.setUserSession(response.user);
+          if (response.isSuccess && response.data) {
+            this.setUserSession(response.data);
           }
           return response;
         }),
@@ -50,77 +48,28 @@ export class AuthService {
   }
 
   // Demo login (development için)
-  demoLogin(
-    userType: 'admin' | 'user',
-    rememberMe: boolean = false
-  ): Observable<LoginResponse> {
-    const demoUsers = {
-      admin: {
-        id: 1,
-        firstName: 'Admin',
-        lastName: 'User',
-        email: 'admin@example.com',
-        role: 'admin',
-        position: 'System Administrator',
-        departmentId: 1,
-        isActive: true,
-      },
-      user: {
-        id: 6,
-        firstName: 'Test',
-        lastName: 'User',
-        email: 'user@example.com',
-        role: 'user',
-        position: 'Developer',
-        departmentId: 2,
-        isActive: true,
-      },
-    };
-
-    const demoResponse: LoginResponse = {
-      success: true,
-      message: 'Demo giriş başarılı',
-      user: demoUsers[userType],
-    };
-
-    return new Observable((observer) => {
-      setTimeout(() => {
-        // Demo için cookie simülasyonu - sessionStorage kullan
-        this.setDemoSession(demoResponse.user!, rememberMe);
-        observer.next(demoResponse);
-        observer.complete();
-      }, 1000);
-    });
-  }
+  
 
   // Session kontrolü
   checkSession(): Observable<User | null> {
     return this.http
-      .get<{ success: boolean; user?: User }>(`${this.apiUrl}/auth/me`, {
+      .get<DataResponseModel<User>>(`${this.apiUrl}/auth/me`, {
         withCredentials: true,
       })
       .pipe(
         map((response) => {
-          if (response.success && response.user) {
-            this.setUserSession(response.user);
-            return response.user;
+          if (response.isSuccess && response.data) {
+            this.setUserSession(response.data);
+            return response.data;
           } else {
+                      console.log('/*/*/*/*/*/*/*/*Session check failed:');
             this.clearSession();
             return null;
           }
         }),
         catchError((error) => {
-          // Session yoksa veya geçersizse
+          console.log('/*/*/*/*/*/*/*/*Session check failed:', error);
           this.clearSession();
-
-          // Demo session kontrolü
-          if (this.checkDemoSession()) {
-            const demoUser = this.getDemoUser();
-            if (demoUser) {
-              this.setUserSession(demoUser);
-              return [demoUser];
-            }
-          }
 
           return [null];
         })
@@ -234,15 +183,6 @@ demoLogout(): void {
   this.clearSession();
   this.navigateToLogin();
 }
-
-  // Demo session yönetimi (development için)
-  private setDemoSession(user: User, rememberMe: boolean): void {
-    this.setUserSession(user);
-
-    const storage = rememberMe ? localStorage : sessionStorage;
-    storage.setItem('demoUser', JSON.stringify(user));
-    storage.setItem('demoLoginTime', new Date().toISOString());
-  }
 
   private checkDemoSession(): boolean {
     const sessionUser = sessionStorage.getItem('demoUser');

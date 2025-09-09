@@ -78,8 +78,8 @@ export class LoginComponent implements OnInit {
       };
       
       const response = await this.authService.login(loginRequest).toPromise();
-      
-      if (response && response.success) {
+      console.log('🚪 Login request sent with credentials:', response) ;
+      if (response?.data && response.isSuccess) {
         this.handleSuccessfulLogin();
       } else {
         this.errorMessage = response?.message || 'Giriş başarısız!';
@@ -109,11 +109,7 @@ export class LoginComponent implements OnInit {
     
     if (isAdminDemo || isUserDemo) {
       const userType = isAdminDemo ? 'admin' : 'user';
-      const response = await this.authService.demoLogin(userType, this.rememberMe).toPromise();
-      
-      if (response && response.success) {
-        this.handleSuccessfulLogin();
-      }
+
     } else {
       throw new Error('Demo credentials geçersiz');
     }

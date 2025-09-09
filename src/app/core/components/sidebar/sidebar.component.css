@@ -318,3 +318,122 @@
     margin-bottom: 20px;
   }
 }
+
+/* Kullanıcı profil card stileri */
+.user-profile-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-top: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: white;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.user-position {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Role badge renkleri */
+.role-admin {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
+
+.role-project-manager {
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+}
+
+.role-technical-manager {
+  background: linear-gradient(45deg, #9b59b6, #8e44ad);
+}
+
+.role-user {
+  background: linear-gradient(45deg, #27ae60, #229954);
+}
+
+.role-default {
+  background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+}
+
+/* Hover efekti */
+.user-profile-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+  transition: all 0.3s ease;
+}
+
+.user-profile-card:hover .user-avatar {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+/* Responsive tasarım */
+@media (max-width: 767px) {
+  .user-profile-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .user-avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 12px;
+  }
+  
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .user-position {
+    font-size: 10px;
+  }
+}

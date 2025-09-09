@@ -55,7 +55,7 @@ export class UserTaskComponent implements OnInit {
     if (!this.currentUser) {
       this.authService.checkSession().subscribe({
         next: (user) => {
-          this.currentUser = user;
+          this.currentUser = user || null;
         },
         error: (error) => {
           console.error('Kullanıcı bilgisi yüklenirken hata:', error);
