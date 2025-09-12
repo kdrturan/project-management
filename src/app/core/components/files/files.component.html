@@ -1,0 +1,387 @@
+// files.component.html
+<div class="main-content">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>📁 Dosya Yönetimi</h1>
+      <p>Projelerinizle ilgili tüm dosyalarınızı buradan yönetebilirsiniz</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-filters">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+            placeholder="Dosya ara...">
+        </div>
+        
+        <select 
+          class="filter-select" 
+          [(ngModel)]="selectedFileType"
+          (change)="onFilterChange()">
+          <option value="">Tüm Dosyalar</option>
+          <option value="pdf">PDF</option>
+          <option value="doc">Word</option>
+          <option value="excel">Excel</option>
+          <option value="image">Resim</option>
+          <option value="archive">Arşiv</option>
+        </select>
+
+        <select 
+          class="filter-select" 
+          [(ngModel)]="selectedProject"
+          (change)="onProjectFilter()">
+          <option value="">Tüm Projeler</option>
+          <option *ngFor="let project of projects" [value]="project.id">
+            {{ project.name }}
+          </option>
+        </select>
+      </div>
+
+      <button 
+        class="upload-button" 
+        (click)="openUploadModal()">
+        <span>📤</span>
+        Dosya Yükle
+      </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon files">📄</div>
+        </div>
+        <div class="stat-number">{{ totalFiles }}</div>
+        <div class="stat-label">Toplam Dosya</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon storage">💾</div>
+        </div>
+        <div class="stat-number">{{ formatBytes(totalSize) }}</div>
+        <div class="stat-label">Kullanılan Alan</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon recent">⏰</div>
+        </div>
+        <div class="stat-number">{{ recentFilesCount }}</div>
+        <div class="stat-label">Son 7 Gün</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon shared">👥</div>
+        </div>
+        <div class="stat-number">{{ sharedFilesCount }}</div>
+        <div class="stat-label">Paylaşılan</div>
+      </div>
+    </div>
+
+    <!-- Files Container -->
+    <div class="files-container">
+      <div class="files-header">
+        <h3>Dosyalarım ({{ filteredFiles.length }})</h3>
+        <div class="view-options">
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'grid'"
+            (click)="setViewMode('grid')">
+            ⊞ Izgara
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'list'"
+            (click)="setViewMode('list')">
+            ☰ Liste
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid View -->
+      <div class="files-grid" [class.active]="viewMode === 'grid'">
+        <div 
+          *ngFor="let file of paginatedFiles" 
+          class="file-card"
+          (click)="selectFile(file)"
+          [class.selected]="selectedFiles.includes(file.id)">
+          
+          <div class="file-icon-large" [ngClass]="getFileTypeClass(file.originalFilename)">
+            {{ getFileIcon(file.originalFilename) }}
+          </div>
+          
+          <div class="file-name" [title]="file.originalFilename">
+            {{ file.originalFilename }}
+          </div>
+          
+          <div class="file-meta">
+            <span class="file-size">{{ formatBytes(file.size) }}</span>
+            <span class="file-date">{{ formatDate(file.uploadDate) }}</span>
+          </div>
+
+          <div class="file-project" *ngIf="file.projectName">
+            <span class="project-tag">📂 {{ file.projectName }}</span>
+          </div>
+          
+          <div class="file-actions" (click)="$event.stopPropagation()">
+            <button 
+              class="action-btn download" 
+              (click)="downloadFile(file.id, file.originalFilename)"
+              [disabled]="downloadingFiles.includes(file.id)">
+              {{ downloadingFiles.includes(file.id) ? '⏳' : '⬇️' }}
+            </button>
+            <button 
+              class="action-btn preview" 
+              (click)="previewFile(file)"
+              *ngIf="canPreview(file.mimeType)">
+              👁️
+            </button>
+            <button 
+              class="action-btn delete" 
+              (click)="confirmDelete(file)"
+              *ngIf="canDelete(file)">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="filteredFiles.length === 0">
+          <div class="empty-icon">📄</div>
+          <h3>Henüz dosya yok</h3>
+          <p>İlk dosyanızı yüklemek için "Dosya Yükle" butonunu kullanın</p>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="files-table" [class.active]="viewMode === 'list'">
+        <table *ngIf="filteredFiles.length > 0">
+          <thead>
+            <tr>
+              <th>
+                <input 
+                  type="checkbox" 
+                  [checked]="isAllSelected()"
+                  (change)="toggleSelectAll()">
+              </th>
+              <th (click)="sort('originalFilename')" class="sortable">
+                Dosya Adı
+                <span *ngIf="sortField === 'originalFilename'">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th (click)="sort('size')" class="sortable">
+                Boyut
+                <span *ngIf="sortField === 'size'">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th (click)="sort('uploadDate')" class="sortable">
+                Yüklenme Tarihi
+                <span *ngIf="sortField === 'uploadDate'">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
+              <th>Proje</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let file of paginatedFiles; trackBy: trackByFileId">
+              <td>
+                <input 
+                  type="checkbox" 
+                  [checked]="selectedFiles.includes(file.id)"
+                  (change)="toggleFileSelection(file.id)">
+              </td>
+              <td>
+                <div class="table-file-info">
+                  <span class="table-file-icon" [ngClass]="getFileTypeClass(file.originalFilename)">
+                    {{ getFileIcon(file.originalFilename) }}
+                  </span>
+                  <div class="table-file-details">
+                    <div class="table-file-name">{{ file.originalFilename }}</div>
+                    <div class="table-file-type">{{ getFileType(file.originalFilename) }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ formatBytes(file.size) }}</td>
+              <td>{{ formatDate(file.uploadDate) }}</td>
+              <td>
+                <span class="project-badge" *ngIf="file.projectName">
+                  {{ file.projectName }}
+                </span>
+                <span *ngIf="!file.projectName" class="no-project">-</span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button 
+                    class="action-btn-small download" 
+                    (click)="downloadFile(file.id, file.originalFilename)"
+                    [disabled]="downloadingFiles.includes(file.id)"
+                    title="İndir">
+                    {{ downloadingFiles.includes(file.id) ? '⏳' : '⬇️' }}
+                  </button>
+                  <button 
+                    class="action-btn-small preview" 
+                    (click)="previewFile(file)"
+                    *ngIf="canPreview(file.mimeType)"
+                    title="Önizle">
+                    👁️
+                  </button>
+                  <button 
+                    class="action-btn-small delete" 
+                    (click)="confirmDelete(file)"
+                    *ngIf="canDelete(file)"
+                    title="Sil">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty State for List View -->
+        <div class="empty-state" *ngIf="filteredFiles.length === 0">
+          <div class="empty-icon">📄</div>
+          <h3>Henüz dosya yok</h3>
+          <p>İlk dosyanızı yüklemek için "Dosya Yükle" butonunu kullanın</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)">
+          ← Önceki
+        </button>
+        
+        <span class="pagination-info">
+          {{ currentPage }} / {{ totalPages }} ({{ filteredFiles.length }} dosya)
+        </span>
+        
+        <button 
+          class="pagination-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)">
+          Sonraki →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="upload-modal" [class.show]="showUploadModal" (click)="closeUploadModal()">
+  <div class="upload-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📤 Dosya Yükle</h3>
+      <button class="modal-close" (click)="closeUploadModal()">×</button>
+    </div>
+
+    <div class="upload-area" 
+         (click)="fileInput.click()"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)"
+         [class.dragover]="isDragOver">
+      <div class="upload-area-icon">📎</div>
+      <div class="upload-area-text">
+        <strong>Dosyaları buraya sürükleyin</strong><br>
+        veya tıklayarak seçin
+      </div>
+      <div class="upload-info">
+        PDF, DOC, XLS, PNG, JPG, ZIP (Max: 50MB)
+      </div>
+    </div>
+
+    <input 
+      #fileInput
+      type="file" 
+      multiple 
+      style="display: none"
+      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar"
+      (change)="onFilesSelected($event)">
+
+    <!-- Selected Files List -->
+    <div class="selected-files" *ngIf="selectedUploadFiles.length > 0">
+      <h4>Seçilen Dosyalar ({{ selectedUploadFiles.length }})</h4>
+      <div class="selected-file-item" *ngFor="let file of selectedUploadFiles; let i = index">
+        <div class="file-info">
+          <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+          <div class="file-details">
+            <div class="file-name">{{ file.name }}</div>
+            <div class="file-size">{{ formatBytes(file.size) }}</div>
+          </div>
+        </div>
+        <button class="remove-file" (click)="removeSelectedFile(i)">×</button>
+      </div>
+    </div>
+
+    <!-- Project Selection -->
+    <div class="project-selection" *ngIf="selectedUploadFiles.length > 0">
+      <label>Proje Seçin (Opsiyonel)</label>
+      <select [(ngModel)]="selectedUploadProject" class="form-control">
+        <option value="">Proje seçmeden yükle</option>
+        <option *ngFor="let project of projects" [value]="project.id">
+          {{ project.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Upload Progress -->
+    <div class="upload-progress" *ngIf="isUploading">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+      </div>
+      <div class="progress-text">
+        Yükleniyor... {{ uploadProgress }}%
+      </div>
+    </div>
+
+    <!-- Upload Actions -->
+    <div class="upload-actions" *ngIf="selectedUploadFiles.length > 0 && !isUploading">
+      <button class="btn btn-secondary" (click)="clearSelectedFiles()">
+        Temizle
+      </button>
+      <button class="btn btn-primary" (click)="uploadFiles()">
+        <span>📤</span>
+        Dosyaları Yükle
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="delete-modal" [class.show]="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="delete-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🗑️ Dosya Silme</h3>
+      <button class="modal-close" (click)="closeDeleteModal()">×</button>
+    </div>
+    
+    <div class="delete-message">
+      <p><strong>{{ fileToDelete?.originalFilename }}</strong> dosyasını silmek istediğinizden emin misiniz?</p>
+      <p class="warning">Bu işlem geri alınamaz!</p>
+    </div>
+    
+    <div class="delete-actions">
+      <button class="btn btn-secondary" (click)="closeDeleteModal()">
+        İptal
+      </button>
+      <button class="btn btn-danger" (click)="deleteFile()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Siliniyor...' : 'Sil' }}
+      </button>
+    </div>
+  </div>
+</div>

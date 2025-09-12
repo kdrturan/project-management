@@ -4,6 +4,7 @@ import { ProjectAddComponent } from './modules/project/components/project-add/pr
 import { TeamTaskManagementComponent } from './modules/teamManagement/components/team-task-management/team-task-management.component';
 import { UserTaskComponent } from './modules/task/components/user-tasks/user-tasks.component';
 import { LoginComponent } from './core/components/login/login.component';
+import { FilesComponent } from './core/components/files/files.component';
 
 export const routes: Routes = [
   // Login route - HİÇ GUARD YOK
@@ -36,7 +37,10 @@ export const routes: Routes = [
     path: 'team-management',
     component: TeamTaskManagementComponent
   },
-  
+  {
+    path: 'file-management',
+    component: FilesComponent
+  },
   // 404 fallback
   { 
     path: '**', 

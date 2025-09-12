@@ -65,11 +65,11 @@
       <label>Durum Filtresi:</label>
       <select [(ngModel)]="statusFilter" class="filter-select">
         <option value="all">Tümü</option>
-        <option value="To Do">Yapılacak</option>
-        <option value="In Progress">Devam Eden</option>
-        <option value="In Review/Test">İnceleme/Test</option>
-        <option value="Blocked">Engelli</option>
-        <option value="Done">Tamamlanan</option>
+        <option value="Yapılacak">Yapılacak</option>
+        <option value="Devam Eden">Devam Eden</option>
+        <option value="İnceleme/Test">İnceleme/Test</option>
+        <option value="Engelli">Engelli</option>
+        <option value="Tamamlanan">Tamamlanan</option>
       </select>
     </div>
     
@@ -119,16 +119,6 @@
           <!-- Task Description -->
           <div class="task-description">{{ task.description }}</div>
 
-          <!-- Task Progress -->
-          <div class="task-progress" *ngIf="task.estimatedEffort">
-            <div class="progress-info">
-              <span>İlerleme: {{ task.actualEffort || 0 }}/{{ task.estimatedEffort }} saat</span>
-              <span class="progress-percentage">{{ getProgressPercentage(task) }}%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="getProgressPercentage(task)"></div>
-            </div>
-          </div>
 
           <!-- Task Meta Info -->
           <div class="task-meta">
@@ -163,11 +153,11 @@
             <select [(ngModel)]="task.status" 
                     (ngModelChange)="updateTaskStatus(task, $event)"
                     class="status-select">
-              <option value="To Do">Yapılacak</option>
-              <option value="In Progress">Devam Eden</option>
-              <option value="In Review/Test">İnceleme/Test</option>
-              <option value="Blocked">Engelli</option>
-              <option value="Done">Tamamlanan</option>
+              <option value="Yapılacak">Yapılacak</option>
+              <option value="Devam Eden">Devam Eden</option>
+              <option value="İnceleme/Test">İnceleme/Test</option>
+              <option value="Engelli">Engelli</option>
+              <option value="Tamamlanan">Tamamlanan</option>
             </select>
           </div>
         </div>

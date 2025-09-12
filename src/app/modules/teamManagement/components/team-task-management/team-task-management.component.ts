@@ -268,7 +268,7 @@ loadAssignedTasks() {
       console.error('Atanmış görevler yüklenirken hata:', error);
     }
   });
-}
+} 
   // Mock data ekleme method'u
   addMockUnassignedTask() {
   const mockTask: UserTask = {
@@ -397,6 +397,11 @@ loadAssignedTasks() {
     }
   }
 
+
+  getDoneTasksCount(): number {
+    return this.assignedTasks.filter(t => t.status === 'Done').length;
+  }
+
   // Kullanıcı adını getir
   getUserFullName(user?: User): string {
     return user ? `${user.firstName} ${user.lastName}` : 'Atanmamış';
@@ -426,11 +431,11 @@ loadAssignedTasks() {
   // Durum rengini getir
   getStatusColor(status: string): string {
     const colors = {
-      'To Do': '#666',
-      'In Progress': '#2196F3',
-      'In Review/Test': '#ff9800',
-      'Blocked': '#f44336',
-      'Done': '#4CAF50'
+      'Yapılacak': '#666',
+      'Devam Eden': '#2196F3',
+      'İnceleme/Test': '#ff9800',
+      'Engelli': '#f44336',
+      'Tamamlanan': '#4CAF50'
     };
     return colors[status as keyof typeof colors] || '#666';
   }
@@ -444,6 +449,7 @@ loadAssignedTasks() {
     return { color: '#f44336', text: 'Yüksek' };
   }
 
+  
   // Filtrelenmiş görevleri getir
   getFilteredAssignedTasks(): UserTask[] {
     return this.assignedTasks.filter(task => {

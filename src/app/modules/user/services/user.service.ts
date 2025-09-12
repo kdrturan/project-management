@@ -20,6 +20,6 @@ export class UserService {
 
   getUsersByDepartment(id:number):Observable<ListResponseModel<User>>{
     const newUrl = this.apiUrl + "/GetByDepartment?id=" + id;
-    return this.httpClient.get<ListResponseModel<User>>(this.apiUrl);
+    return this.httpClient.get<ListResponseModel<User>>(newUrl);
   }  
 }

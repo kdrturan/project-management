@@ -107,11 +107,11 @@ export class UserTaskComponent implements OnInit {
 
   calculateStats() {
     this.stats.total = this.myTasks.length;
-    this.stats.todo = this.myTasks.filter(t => t.status === 'To Do').length;
-    this.stats.inProgress = this.myTasks.filter(t => t.status === 'In Progress').length;
-    this.stats.inReview = this.myTasks.filter(t => t.status === 'In Review/Test').length;
-    this.stats.blocked = this.myTasks.filter(t => t.status === 'Blocked').length;
-    this.stats.done = this.myTasks.filter(t => t.status === 'Done').length;
+    this.stats.todo = this.myTasks.filter(t => t.status === 'Yapılacak').length;
+    this.stats.inProgress = this.myTasks.filter(t => t.status === 'Devam Eden').length;
+    this.stats.inReview = this.myTasks.filter(t => t.status === 'İnceleme/Test').length;
+    this.stats.blocked = this.myTasks.filter(t => t.status === 'Engelli').length;
+    this.stats.done = this.myTasks.filter(t => t.status === 'Tamamlanan').length;
   }
 
   updateTaskStatus(task: UserTask, newStatus: string) {
@@ -176,11 +176,11 @@ export class UserTaskComponent implements OnInit {
 
   getStatusColor(status: string): string {
     const colors = {
-      'To Do': '#666',
-      'In Progress': '#2196F3',
-      'In Review/Test': '#ff9800',
-      'Blocked': '#f44336',
-      'Done': '#4CAF50'
+      'Yapılacak': '#666',
+      'Devam Eden': '#2196F3',
+      'İnceleme/Test': '#ff9800',
+      'Engelli': '#f44336',
+      'Tamamlanan': '#4CAF50'
     };
     return colors[status as keyof typeof colors] || '#666';
   }

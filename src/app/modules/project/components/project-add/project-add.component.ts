@@ -5,6 +5,8 @@ import { CommonModule } from '@angular/common'; // NgIf, NgFor için gerekli
 import { ProjectService } from '../../services/project-service.service';
 import { ProjectDto } from '../../models/projectDto';
 import { AuthService } from '../../../../core/services/auth.service';
+import { FileService } from '../../../../core/services/file.service';
+import { forkJoin } from 'rxjs';
 
 
 @Component({
@@ -33,7 +35,7 @@ export class ProjectAddComponent implements OnInit {
     { value: 'critical', label: 'Kritik', color: '#9c27b0' }
   ];
 
-  constructor(private fb: FormBuilder,private projectService:ProjectService, private authService:AuthService) {}
+  constructor(private fb: FormBuilder,private projectService:ProjectService, private authService:AuthService, private fileService:FileService) {}
 
   ngOnInit() {
     this.projectForm = this.fb.group({
@@ -138,18 +140,35 @@ onSubmit(): void {
 
   console.log('Gönderilecek Project DTO:', newProject);
 
-  this.projectService.addProject(newProject).subscribe({
-    next: (response) => {
-      console.log('Proje eklendi:', response);
-      alert('Proje başarıyla oluşturuldu!');
-      this.projectForm.reset();
-      this.uploadedFiles = [];
-    },
-    error: (err) => {
-      console.error('Hata oluştu:', err);
-      alert('Proje eklenirken hata oluştu!');
-    }
-  });
+  
+const uploadObservables = this.uploadedFiles.map(fileObj => {
+  const fd = new FormData();
+  fd.append('File', fileObj.file);
+  fd.append('EntityType', 'Project');
+  console.log('Yüklenecek dosya:',fd );
+  return this.fileService.uploadFiles(fd);
+});
+
+forkJoin(uploadObservables).subscribe({
+  next: (responses) => {
+    console.log('Tüm dosyalar yüklendi:', responses);
+
+    this.projectService.addProject(newProject).subscribe({
+      next: (res) => {
+        alert('Proje başarıyla oluşturuldu!');
+        this.projectForm.reset();
+        this.uploadedFiles = [];
+      },
+      error: (err) => {
+        console.error('Proje eklenirken hata oluştu:', err);
+      }
+    });
+  },
+  error: (err) => {
+    console.error('Dosya yüklemede hata:', err);
+  }
+});
+
 }
 
 }

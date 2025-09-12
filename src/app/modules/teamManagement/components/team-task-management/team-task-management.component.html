@@ -34,7 +34,7 @@
     <div class="stat-card">
       <div class="stat-icon">✅</div>
       <div class="stat-info">
-        <div class="stat-number">{{assignedTasks}}</div>
+        <div class="stat-number">{{getDoneTasksCount()}}</div>
         <div class="stat-label">Tamamlanan</div>
       </div>
     </div>
@@ -42,15 +42,15 @@
 
   <!-- Filters -->
   <div class="filters-section">
-    <div class="filter-group">
-      <label>Durum:</label>
+        <div class="filter-group">
+      <label>Durum Filtresi:</label>
       <select [(ngModel)]="statusFilter" class="filter-select">
         <option value="all">Tümü</option>
-        <option value="To Do">To Do</option>
-        <option value="In Progress">In Progress</option>
-        <option value="In Review/Test">In Review/Test</option>
-        <option value="Blocked">Blocked</option>
-        <option value="Done">Done</option>
+        <option value="Yapılacak">Yapılacak</option>
+        <option value="Devam Eden">Devam Eden</option>
+        <option value="İnceleme/Test">İnceleme/Test</option>
+        <option value="Engelli">Engelli</option>
+        <option value="Tamamlanan">Tamamlanan</option>
       </select>
     </div>
     
@@ -189,17 +189,20 @@
             </div>
           </div>
           
-			<div class="task-actions">
-				<select class="status-select" 
-						[(ngModel)]="task.status"
-							(ngModelChange)="updateTaskStatus(task, $any($event))">
-					<option value="To Do">To Do</option>
-					<option value="In Progress">In Progress</option>
-					<option value="In Review/Test">In Review/Test</option>
-					<option value="Blocked">Blocked</option>
-					<option value="Done">Done</option>
-				</select>
-			</div>
+			        <div class="task-actions">
+          <div class="status-update">
+            <label>Durum Güncelle:</label>
+            <select [(ngModel)]="task.status" 
+                    (ngModelChange)="updateTaskStatus(task, $event)"
+                    class="status-select">
+              <option value="Yapılacak">Yapılacak</option>
+              <option value="Devam Eden">Devam Eden</option>
+              <option value="İnceleme/Test">İnceleme/Test</option>
+              <option value="Engelli">Engelli</option>
+              <option value="Tamamlanan">Tamamlanan</option>
+            </select>
+          </div>
+        </div>
         </div>
         
         <div *ngIf="getFilteredAssignedTasks().length === 0" class="empty-state">
@@ -219,7 +222,6 @@
         <div class="member-avatar">{{ member.firstName[0] }}{{ member.lastName[0] }}</div>
         <div class="member-info">
           <h3>{{ getUserFullName(member) }}</h3>
-          <p>{{ member.position }}</p>
           <div class="workload-info">
             <span class="workload-label">İş Yükü:</span>
             <span class="workload-value" 

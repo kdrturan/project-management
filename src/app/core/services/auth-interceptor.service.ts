@@ -9,11 +9,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
   let authReq = req;
-  
+    
   // Sadece API istekleri için cookie dahil et
   if (req.url.includes('/api/')) {
+    // FormData kontrolü
+    const isFormData = req.body instanceof FormData;
+    
     authReq = req.clone({
-      setHeaders: {
+      setHeaders: isFormData ? {
+        // FormData için Content-Type header'ını ayarlama - browser otomatik ayarlar
+        'X-Requested-With': 'XMLHttpRequest'
+      } : {
+        // JSON istekleri için
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
@@ -24,15 +31,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       console.log('HTTP Error in interceptor:', error.status, req.url);
-      
+            
       // 401 hatası ve logout endpoint'i değilse logout yap
       if (error.status === 401 && !req.url.includes('/api/auth/logout')) {
         console.log('401 Unauthorized - initiating logout');
-        // Backend logout isteği yapmadan hızlı logout
         authService.quickLogout();
         return throwError(() => error);
       }
-      
+            
       // 403 Forbidden
       if (error.status === 403) {
         console.log('403 Forbidden - redirecting to projects');
