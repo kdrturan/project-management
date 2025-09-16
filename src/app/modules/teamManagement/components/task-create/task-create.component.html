@@ -1,0 +1,283 @@
+<!-- src/app/modules/task/components/task-create/task-create.component.html -->
+<div class="task-create-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>Yeni Görev Oluştur</h1>
+      <p>Görev detaylarını doldurun ve görev oluşturun</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        ← Geri Dön
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="loading-spinner">Yükleniyor...</div>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!isLoading" class="form-container">
+    <div class="form-layout">
+      <!-- Sol Taraf - Form -->
+      <div class="form-content">
+        <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+          
+          <!-- Ana Bilgiler -->
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Görev Bilgileri</h2>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="title">Görev Başlığı <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="title"
+                  formControlName="title" 
+                  class="form-input"
+                  [class.error]="isFieldInvalid('title')"
+                  placeholder="Görev başlığını girin">
+                <div class="error-message" *ngIf="isFieldInvalid('title')">
+                  {{ getFieldError('title') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="description">Açıklama</label>
+                <textarea 
+                  id="description"
+                  formControlName="description" 
+                  class="form-input"
+                  [class.error]="isFieldInvalid('description')"
+                  rows="4"
+                  placeholder="Görev açıklaması..."></textarea>
+                <div class="error-message" *ngIf="isFieldInvalid('description')">
+                  {{ getFieldError('description') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="estimatedEffort">Tahmini Süre (Saat)</label>
+                <input 
+                  type="number" 
+                  id="estimatedEffort"
+                  formControlName="estimatedEffort" 
+                  class="form-input"
+                  [class.error]="isFieldInvalid('estimatedEffort')"
+                  min="0"
+                  step="0.5"
+                  placeholder="0">
+                <div class="error-message" *ngIf="isFieldInvalid('estimatedEffort')">
+                  {{ getFieldError('estimatedEffort') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Proje ve Atama -->
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Proje ve Atama</h2>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="project">Proje <span class="required">*</span></label>
+                <select 
+                  id="project"
+                  formControlName="projectId" 
+                  class="form-input"
+                  [class.error]="isFieldInvalid('projectId')">
+                  <option value="">Proje seçin</option>
+                  <option *ngFor="let project of projects" [value]="project.id">
+                    {{ project.name }}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="isFieldInvalid('projectId')">
+                  {{ getFieldError('projectId') }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="workPackage">İş Paketi</label>
+                <select 
+                  id="workPackage"
+                  formControlName="workPackageId" 
+                  class="form-input"
+                  [disabled]="workPackages.length === 0">
+                  <option value="">İş paketi seçin</option>
+                  <option *ngFor="let wp of workPackages" [value]="wp.id">
+                    {{ wp.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="assignedUser">Atanan Kişi</label>
+                <select 
+                  id="assignedUser"
+                  formControlName="assignedUserId" 
+                  class="form-input">
+                  <option value="">Kişi seçin (isteğe bağlı)</option>
+                  <option *ngFor="let user of users" [value]="user.id">
+                    {{ user.firstName }} {{ user.lastName }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="priority">Öncelik</label>
+                <select 
+                  id="priority"
+                  formControlName="priority" 
+                  class="form-input">
+                  <option *ngFor="let priority of priorities" [value]="priority.value">
+                    {{ priority.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarihler ve Durum -->
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Tarihler ve Durum</h2>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startDate">Başlangıç Tarihi</label>
+                <input 
+                  type="date" 
+                  id="startDate"
+                  formControlName="plannedStartDate" 
+                  class="form-input"
+                  (change)="onStartDateChange()">
+              </div>
+              
+              <div class="form-group">
+                <label for="endDate">Bitiş Tarihi</label>
+                <input 
+                  type="date" 
+                  id="endDate"
+                  formControlName="plannedEndDate" 
+                  class="form-input"
+                  [min]="taskForm.get('plannedStartDate')?.value"
+                  (change)="onEndDateChange()">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="status">Durum</label>
+                <select 
+                  id="status"
+                  formControlName="status" 
+                  class="form-input">
+                  <option *ngFor="let status of statuses" [value]="status.value">
+                    {{ status.label }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <!-- Boş alan -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="onCancel()">
+              İptal Et
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="taskForm.invalid || isSubmitting">
+              <span *ngIf="isSubmitting">Oluşturuluyor...</span>
+              <span *ngIf="!isSubmitting">Görevi Oluştur</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Sağ Taraf - Sticky Önizleme -->
+      <div class="preview-sidebar">
+        <div class="preview-card sticky">
+          <div class="preview-header">
+            <h3>Önizleme</h3>
+          </div>
+          
+          <div class="preview-content">
+            <div class="preview-title">
+              {{ taskForm.get('title')?.value || 'Görev Başlığı' }}
+            </div>
+            
+            <div class="preview-description">
+              {{ (taskForm.get('description')?.value || 'Açıklama girilmedi').substring(0, 100) }}
+              <span *ngIf="taskForm.get('description')?.value && taskForm.get('description')?.value.length > 100">...</span>
+            </div>
+            
+            <div class="preview-badges">
+              <span class="priority-badge" 
+                    [style.background-color]="getPriorityColor(taskForm.get('priority')?.value)">
+                {{ taskForm.get('priority')?.value }}
+              </span>
+              <span class="status-badge">
+                {{ taskForm.get('status')?.value }}
+              </span>
+            </div>
+
+            <div class="preview-meta">
+              <div class="meta-item" *ngIf="getSelectedProject()">
+                <span class="meta-label">Proje:</span>
+                <span class="meta-value">{{ getSelectedProject()?.name }}</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="getSelectedWorkPackage()">
+                <span class="meta-label">İş Paketi:</span>
+                <span class="meta-value">{{ getSelectedWorkPackage()?.name }}</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="getSelectedUser()">
+                <span class="meta-label">Atanan:</span>
+                <span class="meta-value">{{ getSelectedUser()?.firstName }} {{ getSelectedUser()?.lastName }}</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="taskForm.get('plannedStartDate')?.value">
+                <span class="meta-label">Başlangıç:</span>
+                <span class="meta-value">{{ formatPreviewDate(taskForm.get('plannedStartDate')?.value) }}</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="taskForm.get('plannedEndDate')?.value">
+                <span class="meta-label">Bitiş:</span>
+                <span class="meta-value">{{ formatPreviewDate(taskForm.get('plannedEndDate')?.value) }}</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="taskForm.get('estimatedEffort')?.value">
+                <span class="meta-label">Tahmini Süre:</span>
+                <span class="meta-value">{{ taskForm.get('estimatedEffort')?.value }} saat</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="taskForm.get('tags')?.value">
+                <span class="meta-label">Etiketler:</span>
+                <span class="meta-value">{{ taskForm.get('tags')?.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { User } from '../../models/user';
 import { TaskService } from '../../../task/services/task.service';
 import { UserService } from '../../../user/services/user.service';
 import { AssignTaskDto } from '../../../task/models/assignTaskDto';
+import { Route, Router } from '@angular/router';
 
 @Component({
   selector: 'app-team-task-management',
@@ -35,13 +36,15 @@ export class TeamTaskManagementComponent implements OnInit {
   priorityFilter = 'all';
   assigneeFilter = 'all';
 
-  constructor(private fb: FormBuilder, private userTaskService: TaskService,private userService:UserService) {}
+  constructor(private fb: FormBuilder, private userTaskService: TaskService,private userService:UserService,private routes:Router) {}
 
   ngOnInit() {
     this.initializeForm();
     this.loadData();
   }
-
+  openTaskModal() {
+    this.routes.navigate(['/tasks/create']);
+  }
   initializeForm() {
     this.assignTaskForm = this.fb.group({
       assignedUserId: ['', Validators.required],

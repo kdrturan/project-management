@@ -8,4 +8,5 @@ export interface FileItem {
   projectName?: string;
   taskId?: number;
   uploadedBy: string;
+  fileSizeBytes: number;
 }

@@ -15,6 +15,12 @@ export class TaskService {
 
   apiUrl = 'http://localhost:7041/api/Tasks';
 
+
+  createTask(task: any): Observable<ResponseModel> {
+    return this.httpClient.post<ResponseModel>(this.apiUrl, task);
+  }
+
+
   getUnassignedTasks(): Observable<ListResponseModel<UserTask>> {
     const newUrl = this.apiUrl + '/GetUnassignedTasks';
     return this.httpClient.get<ListResponseModel<UserTask>>(newUrl);

@@ -7,6 +7,7 @@ import { LoginComponent } from './core/components/login/login.component';
 import { FilesComponent } from './core/components/files/files.component';
 import { ProjectDetailComponent } from './modules/project/components/project-detail/project-detail.component';
 import { ProjectHistoryComponent } from './modules/project/components/project-history/project-history.component';
+import { TaskCreateComponent } from './modules/teamManagement/components/task-create/task-create.component';
 
 export const routes: Routes = [
   // Login route - HİÇ GUARD YOK
@@ -50,6 +51,10 @@ export const routes: Routes = [
   {
     path: 'file-management',
     component: FilesComponent
+  },
+  {
+    path: 'tasks/create',
+    component: TaskCreateComponent
   },
   // 404 fallback
   { 

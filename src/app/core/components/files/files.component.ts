@@ -459,7 +459,17 @@ loadProjects() {
   }
 
   // Utility Methods
+
+  filesSize(): number {
+    let totelSize:number=0;
+    this.files.forEach(file => {
+      totelSize += file.fileSizeBytes;
+    });
+    return totelSize;
+  }
+
   formatBytes(bytes: number): string {
+
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];

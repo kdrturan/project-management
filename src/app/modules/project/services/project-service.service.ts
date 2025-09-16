@@ -17,6 +17,7 @@ export class ProjectService {
 
 
 
+
   getProjectHistoryByHistoryId(historyId: number): Observable<any> {
     return this.httpClient.get(`${this.apiUrl}/projects/history?id=${historyId}`);
   }

@@ -40,9 +40,10 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
-        <div class="filter-group">
+<!-- Filters -->
+<div class="filters-section">
+  <div class="filters-left">
+    <div class="filter-group">
       <label>Durum Filtresi:</label>
       <select [(ngModel)]="statusFilter" class="filter-select">
         <option value="all">Tümü</option>
@@ -75,6 +76,14 @@
       </select>
     </div>
   </div>
+  
+  <div class="filters-right">
+    <button class="add-task-btn" (click)="openTaskModal()">
+      <span class="btn-icon">+</span>
+      <span class="btn-text">Yeni Görev</span>
+    </button>
+  </div>
+</div>
 
   <!-- Main Content Grid -->
   <div class="main-content-grid">
