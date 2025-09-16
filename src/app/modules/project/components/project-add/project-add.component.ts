@@ -1,13 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common'; // NgIf, NgFor için gerekli
+import { CommonModule } from '@angular/common';
 import { ProjectService } from '../../services/project-service.service';
-import { ProjectDto } from '../../models/projectDto';
 import { AuthService } from '../../../../core/services/auth.service';
-import { FileService } from '../../../../core/services/file.service';
-import { forkJoin } from 'rxjs';
-
 
 @Component({
   selector: 'app-project-create',
@@ -35,14 +31,21 @@ export class ProjectAddComponent implements OnInit {
     { value: 'critical', label: 'Kritik', color: '#9c27b0' }
   ];
 
-  constructor(private fb: FormBuilder,private projectService:ProjectService, private authService:AuthService, private fileService:FileService) {}
+  constructor(
+    private fb: FormBuilder,
+    private projectService: ProjectService, 
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
     this.projectForm = this.fb.group({
-      name: ['E-Ticaret Web Sitesi', Validators.required],
-      description: ['Modern e-ticaret platformu geliştirme projesi. Kullanıcı dostu arayüz, güvenli ödeme sistemi ve envanter yönetimi içerecek.'],
-      plannedStartDate: ['2024-01-15', Validators.required],
-      plannedEndDate: ['2024-06-15', Validators.required],
+      name: ['', Validators.required],
+      description: ['', Validators.required],
+      plannedStartDate: [todayString, Validators.required],
+      plannedEndDate: [todayString, Validators.required],
       priority: ['medium'],
       budget: [50000]
     });
@@ -96,21 +99,21 @@ export class ProjectAddComponent implements OnInit {
   }
 
   calculateDuration(): string {
-  // ❌ Yanlış: startDate ve endDate
-  // const start = this.projectForm.get('startDate')?.value;
-  // const end = this.projectForm.get('endDate')?.value;
-  
-  // ✅ Doğru: plannedStartDate ve plannedEndDate
-  const start = this.projectForm.get('plannedStartDate')?.value;
-  const end = this.projectForm.get('plannedEndDate')?.value;
-  
-  if (start && end) {
-    const diffTime = new Date(end).getTime() - new Date(start).getTime();
-    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
-    return `${diffMonths} Ay`;
+    const start = this.projectForm.get('plannedStartDate')?.value;
+    const end = this.projectForm.get('plannedEndDate')?.value;
+    
+    if (start && end) {
+      const diffTime = new Date(end).getTime() - new Date(start).getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 30) {
+        return `${diffDays} Gün`;
+      } else {
+        const diffMonths = Math.ceil(diffDays / 30);
+        return `${diffMonths} Ay`;
+      }
+    }
+    return '-';
   }
-  return '-';
-}
 
   getPriorityColor(): string {
     const priority = this.priorities.find(p => p.value === this.projectForm.get('priority')?.value);
@@ -121,54 +124,68 @@ export class ProjectAddComponent implements OnInit {
     return this.templates.find(t => t.id === this.selectedTemplate);
   }
 
-onSubmit(): void {
-  if (!this.projectForm.valid) {
-    alert('Lütfen form alanlarını kontrol edin.');
-    return;
-  }
+  onSubmit(): void {
+    if (!this.projectForm.valid) {
+      alert('Lütfen form alanlarını kontrol edin.');
+      return;
+    }
 
-  const formValue = this.projectForm.value;
+    const formValue = this.projectForm.value;
+    
+    // FormData oluştur
+    const formData = new FormData();
+    
+    // Proje bilgilerini FormData'ya ekle
+    formData.append('Name', formValue.name);
+    formData.append('Description', formValue.description || '');
+    formData.append('PlannedStartDate', formValue.plannedStartDate);
+    formData.append('PlannedEndDate', formValue.plannedEndDate);
+    formData.append('Priority', formValue.priority);
+    formData.append('Status', 'Başlatılmadı');
+    
+    // Budget varsa ekle
+    if (formValue.budget) {
+      formData.append('Budget', formValue.budget.toString());
+    }
+    
+    // ProjectManagerId varsa ekle
+    const currentUserId = this.authService.getCurrentUserId();
+    if (currentUserId) {
+      formData.append('ProjectManagerId', currentUserId.toString());
+    }
+    
+    // Dosyaları FormData'ya ekle
+    this.uploadedFiles.forEach((fileObj, index) => {
+      formData.append('Files', fileObj.file);
+    });
 
-  const newProject: ProjectDto = {
-    name: formValue.name, // ✅ Doğru - eskiden projectName yazıyordu
-    description: formValue.description, // ✅ Doğru - eskiden projectDescription yazıyordu
-    plannedStartDate: new Date(formValue.plannedStartDate), // ✅ Doğru - eskiden startDate yazıyordu
-    plannedEndDate: new Date(formValue.plannedEndDate), // ✅ Doğru - eskiden endDate yazıyordu
-    priority: formValue.priority,
-    projectManagerId: this.authService.getCurrentUserId() || undefined
-  };
+    console.log('FormData içeriği:');
+    // FormData içeriğini debug için göster
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
 
-  console.log('Gönderilecek Project DTO:', newProject);
-
-  
-const uploadObservables = this.uploadedFiles.map(fileObj => {
-  const fd = new FormData();
-  fd.append('File', fileObj.file);
-  fd.append('EntityType', 'Project');
-  console.log('Yüklenecek dosya:',fd );
-  return this.fileService.uploadFiles(fd);
-});
-
-forkJoin(uploadObservables).subscribe({
-  next: (responses) => {
-    console.log('Tüm dosyalar yüklendi:', responses);
-
-    this.projectService.addProject(newProject).subscribe({
-      next: (res) => {
+    // Backend'e gönder
+    this.projectService.addProjectWithFormData(formData).subscribe({
+      next: (response) => {
+        console.log('Proje başarıyla oluşturuldu:', response);
         alert('Proje başarıyla oluşturuldu!');
         this.projectForm.reset();
         this.uploadedFiles = [];
+        
+        // Form'u varsayılan değerlere sıfırla
+        const today = new Date().toISOString().split('T')[0];
+        this.projectForm.patchValue({
+          plannedStartDate: today,
+          plannedEndDate: today,
+          priority: 'medium',
+          budget: 50000
+        });
       },
-      error: (err) => {
-        console.error('Proje eklenirken hata oluştu:', err);
+      error: (error) => {
+        console.error('Proje oluşturulurken hata oluştu:', error);
+        alert('Proje oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
       }
     });
-  },
-  error: (err) => {
-    console.error('Dosya yüklemede hata:', err);
   }
-});
-
-}
-
 }

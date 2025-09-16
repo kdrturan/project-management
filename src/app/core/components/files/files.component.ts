@@ -4,22 +4,9 @@ import { ProjectService } from '../../../modules/project/services/project-servic
 import { FileService } from '../../services/file.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FileItem } from '../../models/fileItem';
+import { Project } from '../../../modules/project/models/project';
 
-interface FileItem {
-  id: number;
-  originalFilename: string;
-  mimeType: string;
-  size: number;
-  uploadDate: Date;
-  projectId?: number;
-  projectName?: string;
-  uploadedBy: string;
-}
-
-interface Project {
-  id: number;
-  name: string;
-}
 
 @Component({
   selector: 'app-files',
@@ -28,6 +15,7 @@ interface Project {
   templateUrl: './files.component.html',
   styleUrls: ['./files.component.css']
 })
+
 export class FilesComponent implements OnInit {
   // Data Properties
   files: FileItem[] = [];

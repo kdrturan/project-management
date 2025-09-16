@@ -14,6 +14,10 @@ export class FileService {
   private apiUrl=  "http://localhost:7041/api/Attachments";
 
 
+  getProjectFiles(projectId:number):Observable<ListResponseModel<FileItem>>{
+    const newUrl = this.apiUrl + `/project/${projectId}`;
+    return this.httpClient.get<ListResponseModel<FileItem>>(newUrl);
+  }
 
   uploadFiles(formData: FormData):Observable<ResponseModel>{
     const newUrl = this.apiUrl + "/upload";
@@ -27,7 +31,7 @@ export class FileService {
 
 
   deleteFile(fileId:number): Observable<ResponseModel> {
-    const newUrl = this.apiUrl + `/${fileId}`;
+    const newUrl = this.apiUrl + "?id=" + `${fileId}`;
     return this.httpClient.delete<ResponseModel>(newUrl);
   }
 

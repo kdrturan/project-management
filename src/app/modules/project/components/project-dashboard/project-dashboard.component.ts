@@ -245,7 +245,7 @@ export class ProjectDashboardComponent implements OnInit {
   }
 
   openProject(project: Project) {
-    this.router.navigate(['/projects', project.id]);
+    this.router.navigate(['/projects/detail/', project.id]);
   }
 
   getStatusClass(status?: string): string {

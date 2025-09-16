@@ -19,7 +19,7 @@ interface LoginRequest {
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService {
+export class AuthService{
   private apiUrl = 'http://localhost:7041/api';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -148,6 +148,7 @@ logout(): Observable<any> {
     this.currentUserSubject.next(user);
     this.isAuthenticated = true;
 
+    console.log('🔐 User session set:', user);
     // Local storage'a sadece non-sensitive bilgileri kaydet
     localStorage.setItem('currentUserId', user.id.toString());
     localStorage.setItem('userRole', user.role);

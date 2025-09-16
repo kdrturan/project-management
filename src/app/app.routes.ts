@@ -5,6 +5,8 @@ import { TeamTaskManagementComponent } from './modules/teamManagement/components
 import { UserTaskComponent } from './modules/task/components/user-tasks/user-tasks.component';
 import { LoginComponent } from './core/components/login/login.component';
 import { FilesComponent } from './core/components/files/files.component';
+import { ProjectDetailComponent } from './modules/project/components/project-detail/project-detail.component';
+import { ProjectHistoryComponent } from './modules/project/components/project-history/project-history.component';
 
 export const routes: Routes = [
   // Login route - HİÇ GUARD YOK
@@ -29,6 +31,10 @@ export const routes: Routes = [
     path: 'projects/add',
     component: ProjectAddComponent
   },
+    {
+    path: 'projects/detail/:id',
+    component: ProjectDetailComponent
+  },
   {
     path: 'user-tasks',
     component: UserTaskComponent
@@ -36,6 +42,10 @@ export const routes: Routes = [
   {
     path: 'team-management',
     component: TeamTaskManagementComponent
+  },
+  {
+    path: 'projects/:id/history/:historyId',
+    component: ProjectHistoryComponent
   },
   {
     path: 'file-management',

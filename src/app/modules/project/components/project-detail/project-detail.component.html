@@ -1,0 +1,286 @@
+<div class="main-content">
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1>{{ project?.name || 'Proje Detayları' }}</h1>
+          <div class="project-meta">
+            <span class="status-badge" [class]="'status-' + project?.status?.toLowerCase()">
+              {{ project?.status || 'Durum Belirtilmemiş' }}
+            </span>
+            <span class="priority-badge">
+              {{ getPriorityLabel() }}
+            </span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" (click)="goBack()">
+            ← Geri Dön
+          </button>
+          <button class="btn btn-outline" (click)="copyProjectInfo()" *ngIf="!isEditMode">
+            📋 Kopyala
+          </button>
+          <button class="btn btn-primary" (click)="toggleEditMode()" [disabled]="isLoading">
+            <span *ngIf="isEditMode">❌ İptal Et</span>
+            <span *ngIf="!isEditMode">✏️ Düzenle</span>
+          </button>
+          <button class="btn btn-danger" (click)="deleteProject()" *ngIf="!isEditMode" [disabled]="isLoading">
+            🗑️ Sil
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="projectForm" (ngSubmit)="onSave()">
+      <div class="content">
+        <!-- Sol Panel - Proje Bilgileri -->
+        <div class="detail-section">
+          <div class="section-card">
+            <h2>Proje Bilgileri</h2>
+            
+            <div class="form-group">
+              <label>Proje Adı</label>
+              <input 
+                type="text" 
+                formControlName="name" 
+                class="form-control" 
+                [readonly]="!isEditMode"
+                placeholder="Proje adını girin">
+            </div>
+
+            <div class="form-group">
+              <label>Proje Açıklaması</label>
+              <textarea 
+                formControlName="description" 
+                class="form-control" 
+                rows="4" 
+                [readonly]="!isEditMode"
+                placeholder="Proje açıklamasını girin..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Başlangıç Tarihi</label>
+                <input 
+                  type="date" 
+                  formControlName="plannedStartDate" 
+                  class="form-control"
+                  [readonly]="!isEditMode">
+              </div>
+              <div class="form-group">
+                <label>Bitiş Tarihi</label>
+                <input 
+                  type="date" 
+                  formControlName="plannedEndDate" 
+                  class="form-control"
+                  [readonly]="!isEditMode">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Öncelik Seviyesi</label>
+                <!-- Edit mode'da select -->
+                <select 
+                  *ngIf="isEditMode"
+                  formControlName="priority" 
+                  class="form-control">
+                  <option *ngFor="let priority of priorities" [value]="priority.value">
+                    {{ priority.label }}
+                  </option>
+                </select>
+                <!-- Read-only mode'da input -->
+                <input 
+                  *ngIf="!isEditMode"
+                  type="text" 
+                  class="form-control" 
+                  [value]="getPriorityLabel()"
+                  readonly>
+              </div>
+              <div class="form-group">
+                <label>Durum</label>
+                <!-- Edit mode'da select -->
+                <select 
+                  *ngIf="isEditMode"
+                  formControlName="status" 
+                  class="form-control">
+                  <option *ngFor="let status of statuses" [value]="status.value">
+                    {{ status.label }}
+                  </option>
+                </select>
+                <!-- Read-only mode'da input -->
+                <input 
+                  *ngIf="!isEditMode"
+                  type="text" 
+                  class="form-control" 
+                  [value]="getStatusLabel()"
+                  readonly>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Bütçe (₺)</label>
+              <input 
+                type="number" 
+                formControlName="budget" 
+                class="form-control" 
+                [readonly]="!isEditMode"
+                placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+              <label>Proje Yöneticisi</label>
+              <input 
+                type="text" 
+                [value]="project?.projectManagerName || 'Atanmamış'"
+                class="form-control" 
+                readonly>
+            </div>
+          </div>
+
+          <!-- Proje Dosyaları -->
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Proje Dosyaları</h2>
+              <button 
+                type="button" 
+                class="btn btn-outline" 
+                (click)="fileInput.click()"
+                *ngIf="isEditMode">
+                📎 Dosya Ekle
+              </button>
+            </div>
+
+            <input 
+              #fileInput 
+              type="file" 
+              multiple 
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
+              style="display: none;" 
+              (change)="onFileSelected($event)">
+
+            <!-- Yeni Eklenen Dosyalar -->
+            <div class="file-section" *ngIf="newFiles.length > 0">
+              <h4>Yeni Dosyalar</h4>
+              <div class="file-list">
+                <div class="file-item new-file" *ngFor="let file of newFiles; let i = index">
+                  <div class="file-info">
+                    <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                    <div class="file-details">
+                      <div class="file-name">{{ file.name }}</div>
+                      <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                    </div>
+                  </div>
+                  <button type="button" class="file-remove" (click)="removeNewFile(i)">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mevcut Dosyalar -->
+            <div class="file-section" *ngIf="projectFiles.length > 0">
+              <h4>Mevcut Dosyalar</h4>
+              <div class="file-list">
+                <div class="file-item" *ngFor="let file of projectFiles; let i = index">
+                  <div class="file-info">
+                    <span class="file-icon">{{ getFileIcon(file.originalFilename) }}</span>
+                    <div class="file-details">
+                      <div class="file-name">{{ file.originalFilename }}</div>
+                      <div class="file-size">{{ formatFileSize(file.fileSizeBytes) }}</div>
+                      <div class="file-date">{{ formatDate(file.createdAt) }}</div>
+                    </div>
+                  </div>
+                  <div class="file-actions">
+                    <button type="button" class="btn-icon" (click)="downloadFile(file)" title="İndir">
+                      📥
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn-icon delete" 
+                      (click)="deleteFile(file, i)" 
+                      *ngIf="isEditMode"
+                      title="Sil">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="projectFiles.length === 0 && newFiles.length === 0">
+              <div class="empty-icon">📁</div>
+              <p>Henüz dosya eklenmemiş</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sağ Panel - Proje İstatistikleri -->
+        <div class="stats-section">
+          <div class="stats-card">
+            <h3>📊 Proje İstatistikleri</h3>
+            
+            <div class="stat-item">
+              <span class="stat-label">Proje Süresi:</span>
+              <span class="stat-value">{{ calculateDuration() }}</span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Kalan Süre:</span>
+              <span class="stat-value" [class]="getRemainingTimeClass()">
+                {{ calculateRemainingTime() }}
+              </span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Bütçe:</span>
+              <span class="stat-value">{{ formatCurrency(projectForm.get('budget')?.value) }}</span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Dosya Sayısı:</span>
+              <span class="stat-value">{{ projectFiles.length + newFiles.length }} dosya</span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Oluşturma Tarihi:</span>
+              <span class="stat-value">{{ formatDate(project?.createdAt) }}</span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Son Güncelleme:</span>
+              <span class="stat-value">{{ formatDate(project?.updatedAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Proje Geçmişi -->
+          <div class="stats-card">
+            <h3>📋 Proje Geçmişi</h3>
+			<div class="activity-item" 
+				*ngFor="let historyItem of projectHistory" 
+				(click)="historyItem.id && routeHistory(historyItem.id)">
+			<div class="activity-icon">{{ getChangeIcon(historyItem.changeType) }}</div>
+			<div class="activity-content">
+				<div class="activity-text">Projenin {{ historyItem.versionNumber }}. versiyonu</div>
+				<div class="activity-date">{{ formatDate(historyItem.updatedAt) }}</div>
+			</div>
+			</div>
+            <div class="empty-state" *ngIf="projectHistory.length === 0">
+              <p>Henüz değişiklik geçmişi bulunmuyor</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons" *ngIf="isEditMode">
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+          İptal Et
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="!projectForm.valid || isLoading">
+          <span *ngIf="isLoading">⏳ Kaydediliyor...</span>
+          <span *ngIf="!isLoading">✓ Değişiklikleri Kaydet</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
