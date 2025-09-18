@@ -28,7 +28,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.authService.currentUser$.subscribe((user) => {
         this.currentUser = user;
         this.userRole = user?.role || '';
-        console.log('Sidebar - User role updated:', this.userRole);
       })
     );
   }
@@ -39,7 +38,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private loadUserRole() {
     this.currentUser = this.authService.getCurrentUser();
-    console.log('Sidebar - Current user:', this.currentUser);
     this.userRole = this.authService.getUserRole() || '';
   }
 
@@ -53,7 +51,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isAdmin(): boolean {
-    return this.userRole === 'admin';
+    return this.userRole === 'Admin';
   }
 
   isDeveloper(): boolean {
@@ -100,18 +98,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
 
-    console.log('Logout button clicked');
-
     const confirmed = confirm('Çıkış yapmak istediğinizden emin misiniz?');
 
     if (confirmed) {
-      console.log('User confirmed logout');
 
       // AuthService logout metodunu çağır
       this.authService.logout().subscribe({
-        next: (response) => {
-          console.log('Logout successful:', response);
-        },
+        next: (response) => {        },
         error: (error) => {
           console.error('Logout failed:', error);
           // Hata durumunda manuel logout

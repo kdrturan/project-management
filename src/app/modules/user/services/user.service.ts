@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ListResponseModel } from '../../../core/models/listResponseModel';
 import { User } from '../../teamManagement/models/user';
+import { environment } from '../../../../environments/devEnvironments';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class UserService {
 
   constructor(private httpClient:HttpClient) { }
 
-  apiUrl = 'http://localhost:7041/api/Users';
+  apiUrl = `${environment.apiUrl}/Users`;
 
   getUsers():Observable<ListResponseModel<User>>{
     return this.httpClient.get<ListResponseModel<User>>(this.apiUrl);

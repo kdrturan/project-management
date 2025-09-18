@@ -6,6 +6,7 @@ import { UserTask } from '../../teamManagement/models/userTask';
 import { ResponseModel } from '../../../core/models/responseModel';
 import { AssignTaskDto } from '../models/assignTaskDto';
 import { UpdateTaskStatusDto } from '../models/updateStautsTaskDto';
+import { environment } from '../../../../environments/devEnvironments';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +14,7 @@ import { UpdateTaskStatusDto } from '../models/updateStautsTaskDto';
 export class TaskService {
   constructor(private httpClient: HttpClient) {}
 
-  apiUrl = 'http://localhost:7041/api/Tasks';
+  apiUrl = `${environment.apiUrl}/tasks`;
 
 
   createTask(task: any): Observable<ResponseModel> {
@@ -54,8 +55,6 @@ export class TaskService {
 
   assignTaskToUser(assignTaskDto: AssignTaskDto): Observable<ResponseModel> {
     const newUrl = this.apiUrl + '/AssignTask';
-    console.log('TaskId:', assignTaskDto.taskId);
-
     return this.httpClient.put<ResponseModel>(newUrl, assignTaskDto);
   }
 

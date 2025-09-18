@@ -22,15 +22,8 @@ export class ProjectAddComponent implements OnInit {
   projectForm!: FormGroup;
   departments!: DepartmentDto[]
   uploadedFiles: any[] = [];
-  selectedTemplate = 'marketing';
   isWorkPackageExpanded = false;
 
-  templates = [
-    { id: 'software', name: 'Yazılım Geliştirme', icon: '🚀', desc: 'Agile metodoloji' },
-    { id: 'marketing', name: 'Marketing Kampanyası', icon: '📊', desc: 'Pazarlama süreci' },
-    { id: 'construction', name: 'İnşaat Projesi', icon: '🏗️', desc: 'Yapı süreci' },
-    { id: 'creative', name: 'Kreatif Proje', icon: '🎨', desc: 'Tasarım süreci' }
-  ];
 
   priorities = [
     { value: 'Düşük', label: 'Düşük', color: '#4CAF50' },
@@ -64,18 +57,17 @@ export class ProjectAddComponent implements OnInit {
     description: ['', Validators.required],
     plannedStartDate: [todayString, Validators.required],
     plannedEndDate: [todayString, Validators.required],
-    // departments: ['', Validators.required], // BU SATIRI KALDIR
     priority: ['Orta'],
     budget: [50000],
     workPackages: this.fb.array([])
   });
 }
 
+
   getDepartments(){
       this.departmentService.getAllDepartments().subscribe({
       next: (response:ListResponseModel<DepartmentDto>) => {
         this.departments = response.data;
-        console.log('Bölümler yüklendi:', this.departments);
       },
       error: (error) => {
         console.error('Bölümler yüklenirken hata oluştu:', error);
@@ -91,21 +83,21 @@ export class ProjectAddComponent implements OnInit {
     this.isWorkPackageExpanded = !this.isWorkPackageExpanded;
   }
 
-addWorkPackage() {
-  const today = new Date().toISOString().split('T')[0];
-  
-  const workPackageGroup = this.fb.group({
-    name: ['', Validators.required],
-    description: [''],
-    status: ['not_started', Validators.required],
-    plannedStartDate: [today],
-    plannedEndDate: [today],
-    department: [null, Validators.required], // null olarak başlat
-    technicalManagerId: [null]
-  });
+  addWorkPackage() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const workPackageGroup = this.fb.group({
+      name: ['', Validators.required],
+      description: [''],
+      status: ['Başlatılmadı', Validators.required],
+      plannedStartDate: [today],
+      plannedEndDate: [today],
+      department: [null, Validators.required], // null olarak başlat
+      technicalManagerId: [null]
+    });
 
-  this.workPackages.push(workPackageGroup);
-}
+    this.workPackages.push(workPackageGroup);
+  }
 
   removeWorkPackage(index: number) {
     this.workPackages.removeAt(index);
@@ -142,9 +134,6 @@ onDepartmentChange(workPackageIndex: number, event: any): void {
     workPackageFormGroup.patchValue({
       technicalManagerId: selectedDepartment.managerId
     });
-    
-    console.log('Department seçildi:', selectedDepartment.name);
-    console.log('Manager ID atandı:', selectedDepartment.managerId);
   }
 }
 
@@ -166,9 +155,6 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
     this.uploadedFiles.splice(index, 1);
   }
 
-  selectTemplate(templateId: string) {
-    this.selectedTemplate = templateId;
-  }
 
   getFileIcon(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase();
@@ -218,9 +204,6 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
     return priority?.color || '#ff9800';
   }
 
-  getSelectedTemplate(): any {
-    return this.templates.find(t => t.id === this.selectedTemplate);
-  }
 
   onSubmit(): void {
   if (!this.projectForm.valid) {
@@ -228,66 +211,13 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
     alert('Lütfen form alanlarını kontrol edin.');
     return;
   }
-
-  const formValue = this.projectForm.value;
   const formData = new FormData();
   
-  // Proje bilgilerini FormData'ya ekle
-  formData.append('Name', formValue.name);
-  formData.append('Description', formValue.description || '');
-  formData.append('PlannedStartDate', formValue.plannedStartDate);
-  formData.append('PlannedEndDate', formValue.plannedEndDate);
-  formData.append('Priority', formValue.priority);
-  formData.append('Status', 'Başlatılmadı');
-
-  if (formValue.budget) {
-    formData.append('Budget', formValue.budget.toString());
-  }
-  
-  const currentUserId = this.authService.getCurrentUserId();
-  if (currentUserId) {
-    formData.append('ProjectManagerId', currentUserId.toString());
-  }
-  
-  this.uploadedFiles.forEach((fileObj, index) => {
-    formData.append('Files', fileObj.file);
-  });
-
-  // Work packages için düzeltilmiş kod
-  if (formValue.workPackages && formValue.workPackages.length > 0) {
-    formValue.workPackages.forEach((wp: any, index: number) => {
-      formData.append(`WorkPackages[${index}].Name`, wp.name);
-      formData.append(`WorkPackages[${index}].Description`, wp.description || '');
-      formData.append(`WorkPackages[${index}].Status`, wp.status);
-      formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
-      formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
-      
-      // Department objesinden ID ve ManagerID al
-      if (wp.department) {
-        const selectedDepartment = this.departments.find(dept => dept.id === parseInt(wp.department));
-        
-        if (selectedDepartment) {
-          // Department ID'sini ekle
-          formData.append(`WorkPackages[${index}].DepartmentId`, selectedDepartment.id.toString());
-          
-          // Manager ID'sini ekle (eğer technicalManagerId boşsa department manager'ını kullan)
-          const managerId = wp.technicalManagerId || selectedDepartment.managerId;
-          if (managerId) {
-            formData.append(`WorkPackages[${index}].TechnicalManagerId`, managerId.toString());
-          }
-        }
-      }
-    });
-  }
-
-  console.log('FormData içeriği:');
-  for (let pair of formData.entries()) {
-    console.log(pair[0] + ': ' + pair[1]);
-  }
+  this.addProjectToFormdata(formData);
+  this.addWorkPackageToFormdata(formData);
 
   this.projectService.addProjectWithFormData(formData).subscribe({
     next: (response) => {
-      console.log('Proje oluşturuldu:', response);
       this.resetForm();
       alert('Proje başarıyla oluşturuldu!');
     },
@@ -298,40 +228,58 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
   });
 }
 
-  private saveWorkPackages(projectId: number, workPackages: any[]) {
-    let savedCount = 0;
-    const totalCount = workPackages.length;
 
-    workPackages.forEach(wp => {
-      const workPackageDto: WorkPackageDto = {
-        name: wp.name,
-        description: wp.description,
-        status: wp.status,
-        plannedStartDate: wp.plannedStartDate,
-        plannedEndDate: wp.plannedEndDate,
-        departmentId: wp.departmentId,
-        technicalManagerId: wp.technicalManagerId
-      };
+  private addProjectToFormdata(formData: FormData) {
+    const formValue = this.projectForm.value;
+    formData.append('Name', formValue.name);
+    formData.append('Description', formValue.description || '');
+    formData.append('PlannedStartDate', formValue.plannedStartDate);
+    formData.append('PlannedEndDate', formValue.plannedEndDate);
+    formData.append('Priority', formValue.priority);
+    formData.append('Status', 'Başlatılmadı');
 
-      this.workPackageService.addWorkPackage(workPackageDto).subscribe({
-        next: (response) => {
-          savedCount++;
-          if (savedCount === totalCount) {
-            this.resetForm();
-            alert(`Proje ve ${totalCount} iş paketi başarıyla oluşturuldu!`);
-          }
-        },
-        error: (error) => {
-          console.error('Work package kaydedilirken hata:', error);
-          savedCount++;
-          if (savedCount === totalCount) {
-            this.resetForm();
-            alert('Proje oluşturuldu, ancak bazı iş paketleri kaydedilirken hata oluştu.');
+    if (formValue.budget) {
+      formData.append('Budget', formValue.budget.toString());
+    }
+    
+    const currentUserId = this.authService.getCurrentUserId();
+    if (currentUserId) {
+      formData.append('ProjectManagerId', currentUserId.toString());
+    }
+    
+    this.uploadedFiles.forEach((fileObj, index) => {
+      formData.append('Files', fileObj.file);
+    });
+  }
+
+
+
+  private addWorkPackageToFormdata(formData: FormData) {
+    const formValue = this.projectForm.value;
+    if (formValue.workPackages && formValue.workPackages.length > 0) {
+      formValue.workPackages.forEach((wp: any, index: number) => {
+        formData.append(`WorkPackages[${index}].Name`, wp.name);
+        formData.append(`WorkPackages[${index}].Description`, wp.description || '');
+        formData.append(`WorkPackages[${index}].Status`, wp.status);
+        formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
+        formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
+        
+        if (wp.department) {
+          const selectedDepartment = this.departments.find(dept => dept.id === parseInt(wp.department));
+          
+          if (selectedDepartment) {
+            formData.append(`WorkPackages[${index}].DepartmentId`, selectedDepartment.id.toString());
+            
+            const managerId = wp.technicalManagerId || selectedDepartment.managerId;
+            if (managerId) {
+              formData.append(`WorkPackages[${index}].TechnicalManagerId`, managerId.toString());
+            }
           }
         }
       });
-    });
+    }
   }
+
 
   private resetForm() {
     this.projectForm.reset();
@@ -339,7 +287,6 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
     this.departments = [];
     this.isWorkPackageExpanded = false;
     
-    // Form'u varsayılan değerlere sıfırla
     const today = new Date().toISOString().split('T')[0];
     this.projectForm.patchValue({
       plannedStartDate: today,
@@ -348,7 +295,6 @@ onDepartmentSelectionChange(workPackageIndex: number, departmentId: string): voi
       budget: 50000
     });
 
-    // Work packages array'ini temizle
     while (this.workPackages.length !== 0) {
       this.workPackages.removeAt(0);
     }

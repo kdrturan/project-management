@@ -85,7 +85,6 @@ export class UserTaskComponent implements OnInit {
             }));
             
             this.calculateStats();
-            console.log('Görevlerim yüklendi:', this.myTasks);
           }
         },
         error: (error) => {
@@ -197,18 +196,13 @@ export class UserTaskComponent implements OnInit {
 
   // Helper methods for user feedback
   private showSuccessMessage(message: string) {
-    // Başarı mesajını göster (toast, alert vs.)
     console.log('Success:', message);
-    // Toast service kullanabilirsiniz
   }
 
   private showErrorMessage(message: string) {
-    // Hata mesajını göster
     console.error('Error:', message);
-    // Toast service kullanabilirsiniz
   }
 
-  // Refresh tasks
   refreshTasks() {
     this.loadMyTasks();
   }
@@ -217,7 +211,6 @@ export class UserTaskComponent implements OnInit {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        // AuthService otomatik olarak login sayfasına yönlendirecek
       },
       error: (error) => {
         console.error('Logout error:', error);

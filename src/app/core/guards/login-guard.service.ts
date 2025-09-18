@@ -18,13 +18,10 @@ export class LoginGuard implements CanActivate {
     
     // Sadece local durumu kontrol et - backend çağrısı yapma
     if (this.authService.isLoggedIn()) {
-      console.log('User already logged in, redirecting to projects');
       this.router.navigate(['/projects']);
       return false;
     }
-    
-    console.log('User not logged in, allowing access to login page');
-    return true;
+      return true;
   }
 }
 

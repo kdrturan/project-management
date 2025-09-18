@@ -168,8 +168,8 @@
           <div class="assigned-user">
             <div class="user-avatar">{{ task.assignedUser?.firstName?.[0] }}{{ task.assignedUser?.lastName?.[0] }}</div>
             <div class="user-info">
-              <div class="user-name">{{ getUserFullName(task.assignedUser) }}</div>
-              <div class="user-position">{{ task.assignedUser?.position }}</div>
+              <div class="user-name">{{ task.assignedUserName }}</div>
+              <div class="user-position">{{ task.assignedUser?.role }}</div>
             </div>
           </div>
           

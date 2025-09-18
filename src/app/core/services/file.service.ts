@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ResponseModel } from '../models/responseModel';
 import { FileItem } from '../models/fileItem';
 import { ListResponseModel } from '../models/listResponseModel';
+import { environment } from '../../../environments/devEnvironments';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ import { ListResponseModel } from '../models/listResponseModel';
 export class FileService {
 
   constructor(private httpClient:HttpClient) { }
-  private apiUrl=  "http://localhost:7041/api/Attachments";
+  private apiUrl = `${environment.apiUrl}/Attachments`;
 
 
   getProjectFiles(projectId:number):Observable<ListResponseModel<FileItem>>{

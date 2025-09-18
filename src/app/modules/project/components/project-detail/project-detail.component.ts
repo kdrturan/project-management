@@ -12,13 +12,12 @@ import { DepartmentDto } from '../../../departments/models/departmentsDto';
 import { WorkpackageService } from '../../../workPackage/services/workpackage.service';
 import { UpdateWorkPackageDto } from '../../../workPackage/models/updateWorkPackageDto';
 
-
 @Component({
   selector: 'app-project-detail',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, FormsModule],
   templateUrl: './project-detail.component.html',
-  styleUrls: ['./project-detail.component.css']
+  styleUrls: ['./project-detail.component.css'],
 })
 export class ProjectDetailComponent implements OnInit {
   projectForm!: FormGroup;
@@ -32,10 +31,9 @@ export class ProjectDetailComponent implements OnInit {
   projectId!: number;
   departments: DepartmentDto[] = [];
 
-  // Yeni eklenen değişkenler - İş paketi düzenleme için
-  editingWorkPackages: { [key: number]: boolean } = {}; // Hangi iş paketinin düzenlendiğini takip eder
-  editedWorkPackages: { [key: number]: any } = {}; // Düzenlenen iş paketlerinin verilerini tutar
-  updatedWorkPackages: UpdateWorkPackageDto[] = []; // Güncellenen iş paketlerini tutar
+  editingWorkPackages: { [key: number]: boolean } = {};
+  editedWorkPackages: { [key: number]: any } = {};
+  updatedWorkPackages: UpdateWorkPackageDto[] = [];
 
   // Expandable sections state
   isFilesSectionExpanded = false;
@@ -45,7 +43,7 @@ export class ProjectDetailComponent implements OnInit {
     { value: 'Düşük', label: 'Düşük', color: '#4CAF50' },
     { value: 'Orta', label: 'Orta', color: '#ff9800' },
     { value: 'Yüksek', label: 'Yüksek', color: '#f44336' },
-    { value: 'Kritik', label: 'Kritik', color: '#9c27b0' }
+    { value: 'Kritik', label: 'Kritik', color: '#9c27b0' },
   ];
 
   statuses = [
@@ -53,14 +51,14 @@ export class ProjectDetailComponent implements OnInit {
     { value: 'Devam Ediyor', label: 'Devam Ediyor' },
     { value: 'Beklemede', label: 'Beklemede' },
     { value: 'Tamamlandı', label: 'Tamamlandı' },
-    { value: 'İptal Edildi', label: 'İptal Edildi' }
+    { value: 'İptal Edildi', label: 'İptal Edildi' },
   ];
 
   workPackageStatuses = [
     { value: 'Başlatılmadı', label: 'Başlatılmadı' },
     { value: 'Devam Ediyor', label: 'Devam Ediyor' },
     { value: 'Tamamlandı', label: 'Tamamlandı' },
-    { value: 'Beklemede', label: 'Beklemede' }
+    { value: 'Beklemede', label: 'Beklemede' },
   ];
 
   projectHistory: any[] = [];
@@ -84,26 +82,26 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   getProjectWorkPackes() {
-    this.workPackageService.getWorkPackagesByProjectId(this.projectId).subscribe({
-      next: (response) => { 
-        this.projectWorkPackages = response.data || [];
-        console.log('Response iş paketleri:', response);
-        console.log('Yüklenen iş paketleri:', this.projectWorkPackages);
-      },
-      error: (error) => {
-        console.error('İş paketleri yüklenirken hata oluştu:', error);
-      }
-    });
+    this.workPackageService
+      .getWorkPackagesByProjectId(this.projectId)
+      .subscribe({
+        next: (response) => {
+          this.projectWorkPackages = response.data || [];
+        },
+        error: (error) => {
+          console.error('İş paketleri yüklenirken hata oluştu:', error);
+        },
+      });
   }
 
   getDepartments() {
     this.departmnetService.getAllDepartments().subscribe({
-      next: (response) => { 
+      next: (response) => {
         this.departments = response.data || [];
       },
       error: (error) => {
         console.error('Departmanlar yüklenirken hata oluştu:', error);
-      }
+      },
     });
   }
 
@@ -113,14 +111,14 @@ export class ProjectDetailComponent implements OnInit {
       description: [''],
       plannedStartDate: ['', Validators.required],
       plannedEndDate: ['', Validators.required],
-      priority: ['medium'],
+      priority: ['Orta'],
       status: ['Başlatılmadı'],
-      budget: [0]
+      budget: [0],
     });
   }
 
   getProjectId() {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       this.projectId = +params['id'];
     });
   }
@@ -137,7 +135,9 @@ export class ProjectDetailComponent implements OnInit {
   // Add files button click handler
   addFiles(event: Event) {
     event.stopPropagation();
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.click();
     }
@@ -146,41 +146,41 @@ export class ProjectDetailComponent implements OnInit {
   // Add work package button click handler
   addWorkPackage(event: Event) {
     event.stopPropagation();
-    
+
     const today = new Date().toISOString().split('T')[0];
-    
+
     const newWorkPackage: createWorkPackageDto = {
       name: '',
       description: '',
       status: 'Başlatılmadı',
       plannedStartDate: today,
       plannedEndDate: today,
-      departmentId: 0
+      departmentId: 0,
     };
 
     this.newWorkPackages.push(newWorkPackage);
   }
 
-  // Remove new work package
   removeNewWorkPackage(index: number) {
     this.newWorkPackages.splice(index, 1);
   }
 
-  // YENİ METODLAR - İş paketi düzenleme için
-  
-  // İş paketi düzenleme modunu başlat
   startEditingWorkPackage(workPackage: WorkPackage, index: number) {
     this.editingWorkPackages[index] = true;
-    
+
     // Mevcut değerleri kopyala
     this.editedWorkPackages[index] = {
       id: workPackage.id,
       name: workPackage.name,
       description: workPackage.description,
       status: workPackage.status,
-      plannedStartDate: this.formatDateForInput(workPackage.plannedStartDate || ''),
+      plannedStartDate: this.formatDateForInput(
+        workPackage.plannedStartDate || ''
+      ),
       plannedEndDate: this.formatDateForInput(workPackage.plannedEndDate || ''),
-      departmentId: this.getDepartmentIdByName(workPackage.departmentName || '')
+      departmentId: this.getDepartmentIdByName(
+        workPackage.departmentName || ''
+      ),
     };
   }
 
@@ -193,7 +193,7 @@ export class ProjectDetailComponent implements OnInit {
   // Düzenlenen iş paketini kaydet
   saveEditedWorkPackage(index: number) {
     const editedWp = this.editedWorkPackages[index];
-    
+
     // Validasyon
     if (!editedWp.name || editedWp.name.trim() === '') {
       alert('İş paketi adı zorunludur.');
@@ -208,11 +208,13 @@ export class ProjectDetailComponent implements OnInit {
       status: editedWp.status,
       plannedStartDate: editedWp.plannedStartDate,
       plannedEndDate: editedWp.plannedEndDate,
-      departmentId: editedWp.departmentId
+      departmentId: editedWp.departmentId,
     };
 
     // Daha önce bu iş paketi güncellenmiş mi kontrol et
-    const existingIndex = this.updatedWorkPackages.findIndex(wp => wp.id === editedWp.id);
+    const existingIndex = this.updatedWorkPackages.findIndex(
+      (wp) => wp.id === editedWp.id
+    );
     if (existingIndex !== -1) {
       this.updatedWorkPackages[existingIndex] = updatedWorkPackage;
     } else {
@@ -222,42 +224,42 @@ export class ProjectDetailComponent implements OnInit {
     // Düzenleme modundan çık
     delete this.editingWorkPackages[index];
     delete this.editedWorkPackages[index];
-    
+
     alert('İş paketi değişiklikleri kaydedildi. Projeyi kaydetmeyi unutmayın!');
   }
 
   // İş paketini sil
   deleteWorkPackage(workPackage: WorkPackage, index: number) {
-    if (confirm(`"${workPackage.name}" iş paketini silmek istediğinizden emin misiniz?`)) {
-
+    if (
+      confirm(
+        `"${workPackage.name}" iş paketini silmek istediğinizden emin misiniz?`
+      )
+    ) {
       this.workPackageService.deleteWorkPackage(workPackage.id || 0).subscribe({
         next: (response) => {
-          console.log("İş paketi başarıyla silindi.");
-          // UI'dan kaldır
           this.projectWorkPackages.splice(index, 1);
           alert('İş paketi silindi. Projeyi kaydetmeyi unutmayın!');
         },
         error: (error) => {
-          console.log("İş silinirken bir hata oluştu.");
-        }
-      })
-
+          console.log('İş silinirken bir hata oluştu.');
+        },
+      });
     }
   }
 
   // Departman adından ID'yi bul
   getDepartmentIdByName(departmentName: string): number {
-    const department = this.departments.find(d => d.name === departmentName);
+    const department = this.departments.find((d) => d.name === departmentName);
     return department ? department.id : 0;
   }
 
   // Work package status class
   getWorkPackageStatusClass(status: string): string {
     const statusClasses: { [key: string]: string } = {
-      'Başlatılmadı': 'wp-status-not-started',
+      Başlatılmadı: 'wp-status-not-started',
       'Devam Ediyor': 'wp-status-in-progress',
-      'Tamamlandı': 'wp-status-completed',
-      'Beklemede': 'wp-status-on-hold'
+      Tamamlandı: 'wp-status-completed',
+      Beklemede: 'wp-status-on-hold',
     };
     return statusClasses[status] || '';
   }
@@ -265,16 +267,15 @@ export class ProjectDetailComponent implements OnInit {
   // Work package status label
   getWorkPackageStatusLabel(status: string): string {
     const statusLabels: { [key: string]: string } = {
-      'Başlatılmadı': 'Başlatılmadı',
+      Başlatılmadı: 'Başlatılmadı',
       'Devam Ediyor': 'Devam Ediyor',
-      'Tamamlandı': 'Tamamlandı',
-      'Beklemede': 'Beklemede'
+      Tamamlandı: 'Tamamlandı',
+      Beklemede: 'Beklemede',
     };
     return statusLabels[status] || status;
   }
 
   routeHistory(historyId: number) {
-    console.log('Navigating to history ID:', historyId);
     this.router.navigate([`/projects/${this.projectId}/history/${historyId}`]);
   }
 
@@ -291,7 +292,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (error) => {
         console.error('Proje yüklenirken hata oluştu:', error);
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -300,11 +301,13 @@ export class ProjectDetailComponent implements OnInit {
       this.projectForm.patchValue({
         name: this.project.name,
         description: this.project.description,
-        plannedStartDate: this.formatDateForInput(this.project.plannedStartDate),
+        plannedStartDate: this.formatDateForInput(
+          this.project.plannedStartDate
+        ),
         plannedEndDate: this.formatDateForInput(this.project.plannedEndDate),
         priority: this.project.priority,
         status: this.project.status,
-        budget: this.project.budget
+        budget: this.project.budget,
       });
     }
   }
@@ -316,7 +319,7 @@ export class ProjectDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Dosyalar yüklenirken hata oluştu:', error);
-      }
+      },
     });
   }
 
@@ -329,22 +332,22 @@ export class ProjectDetailComponent implements OnInit {
       error: (error) => {
         console.error('Proje geçmişi yüklenirken hata oluştu:', error);
         this.projectHistory = [];
-      }
+      },
     });
   }
 
   getChangeIcon(changeType: string): string {
     const icons: any = {
-      'Created': '🆕',
-      'Updated': '✏️',
-      'StatusChanged': '🔄',
-      'FileAdded': '📎',
-      'FileDeleted': '🗑️',
-      'PriorityChanged': '⚡',
-      'BudgetChanged': '💰',
-      'DateChanged': '📅',
-      'DescriptionChanged': '📝',
-      'NameChanged': '🏷️'
+      Created: '🆕',
+      Updated: '✏️',
+      StatusChanged: '🔄',
+      FileAdded: '📎',
+      FileDeleted: '🗑️',
+      PriorityChanged: '⚡',
+      BudgetChanged: '💰',
+      DateChanged: '📅',
+      DescriptionChanged: '📝',
+      NameChanged: '🏷️',
     };
     return icons[changeType] || '📋';
   }
@@ -383,7 +386,7 @@ export class ProjectDetailComponent implements OnInit {
         this.newFiles.push({
           name: file.name,
           size: file.size,
-          file: file
+          file: file,
         });
       }
     }
@@ -394,7 +397,11 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   deleteFile(file: any, index: number) {
-    if (confirm(`"${file.originalFilename}" dosyasını silmek istediğinizden emin misiniz?`)) {
+    if (
+      confirm(
+        `"${file.originalFilename}" dosyasını silmek istediğinizden emin misiniz?`
+      )
+    ) {
       this.fileService.deleteFile(file.id).subscribe({
         next: () => {
           this.projectFiles.splice(index, 1);
@@ -403,7 +410,7 @@ export class ProjectDetailComponent implements OnInit {
         error: (error) => {
           console.error('Dosya silinirken hata oluştu:', error);
           alert('Dosya silinirken bir hata oluştu.');
-        }
+        },
       });
     }
   }
@@ -421,7 +428,7 @@ export class ProjectDetailComponent implements OnInit {
       error: (error) => {
         console.error('Dosya indirilirken hata oluştu:', error);
         alert('Dosya indirilirken bir hata oluştu.');
-      }
+      },
     });
   }
 
@@ -430,7 +437,6 @@ export class ProjectDetailComponent implements OnInit {
       alert('Lütfen form alanlarını kontrol edin.');
       return;
     }
-
     // Yeni iş paketleri için validasyon
     for (let i = 0; i < this.newWorkPackages.length; i++) {
       const wp = this.newWorkPackages[i];
@@ -440,9 +446,7 @@ export class ProjectDetailComponent implements OnInit {
         return;
       }
     }
-
     this.isLoading = true;
-    const formValue = this.projectForm.value;
     const formData = new FormData();
 
     if (this.newFiles.length > 0) {
@@ -450,57 +454,18 @@ export class ProjectDetailComponent implements OnInit {
         formData.append('Files', fileObj.file);
       });
     }
-    
-    formData.append('Id', this.projectId.toString());
-    formData.append('Name', formValue.name);
-    formData.append('Description', formValue.description || '');
-    formData.append('PlannedStartDate', formValue.plannedStartDate);
-    formData.append('PlannedEndDate', formValue.plannedEndDate);
-    formData.append('Priority', formValue.priority);
-    formData.append('Status', formValue.status);
 
-    if (formValue.budget) {
-      formData.append('Budget', formValue.budget.toString());
-    }
+    this.setProjectForm(formData);
+    this.addNewWorkPackages(formData);
+    this.addUpdatedWorkPackages(formData);
+    this.updateProjectForm(formData);
+  }
 
-    // Yeni iş paketlerini ekle
-    this.newWorkPackages.forEach((wp, index) => {
-      formData.append(`WorkPackages[${index}].Name`, wp.name);
-      formData.append(`WorkPackages[${index}].Description`, wp.description || '');
-      formData.append(`WorkPackages[${index}].Status`, wp.status);
-      if (wp.plannedStartDate) {
-        formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
-      }
-      if (wp.plannedEndDate) {
-        formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
-      }
-      if (wp.departmentId) {
-        formData.append(`WorkPackages[${index}].DepartmentId`, wp.departmentId.toString());
-      }
-    });
 
-    // Güncellenen/silinen iş paketlerini ekle
-    this.updatedWorkPackages.forEach((wp, index) => {
-      if (wp.isDeleted) {
-        formData.append(`WorkPackages[${index}].Id`, wp.id != null ? wp.id.toString() : '');
-      } else {
-        formData.append(`WorkPackages[${index}].Id`, wp.id != null ? wp.id.toString() : '');
-        formData.append(`WorkPackages[${index}].Name`, wp.name);
-        formData.append(`WorkPackages[${index}].Description`, wp.description || '');
-        formData.append(`WorkPackages[${index}].Status`, wp.status);
-        if (wp.plannedStartDate) {
-          formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
-        }
-        if (wp.plannedEndDate) {
-          formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
-        }
-        if (wp.departmentId) {
-          formData.append(`WorkPackages[${index}].DepartmentId`, wp.departmentId.toString());
-        }
-      }
-    });
 
-    this.projectService.updateProject(formData).subscribe({
+
+private updateProjectForm(formData:FormData){
+  this.projectService.updateProject(formData).subscribe({
       next: (response) => {
         let successMessage = 'Proje başarıyla güncellendi!';
         if (this.newWorkPackages.length > 0) {
@@ -509,7 +474,7 @@ export class ProjectDetailComponent implements OnInit {
         if (this.updatedWorkPackages.length > 0) {
           successMessage += ` ${this.updatedWorkPackages.length} iş paketi güncellendi.`;
         }
-        
+
         alert(successMessage);
         this.isEditMode = false;
         this.newFiles = [];
@@ -525,6 +490,86 @@ export class ProjectDetailComponent implements OnInit {
         console.error('Proje güncellenirken hata oluştu:', error);
         alert('Proje güncellenirken bir hata oluştu.');
         this.isLoading = false;
+      },
+    });
+}
+
+private setProjectForm(formData:FormData){
+  const formValue = this.projectForm.value;
+  formData.append('Id', this.projectId.toString());
+  formData.append('Name', formValue.name);
+  formData.append('Description', formValue.description || '');
+  formData.append('PlannedStartDate', formValue.plannedStartDate);
+  formData.append('PlannedEndDate', formValue.plannedEndDate);
+  formData.append('Priority', formValue.priority);
+  formData.append('Status', formValue.status);
+
+  if (formValue.budget) {
+    formData.append('Budget', formValue.budget.toString());
+  }
+
+}
+
+
+private addUpdatedWorkPackages(formData:FormData){
+  this.updatedWorkPackages.forEach((wp, index) => {
+      formData.append(
+        `WorkPackages[${index}].Id`,
+        wp.id != null ? wp.id.toString() : ''
+      );
+      formData.append(`WorkPackages[${index}].Name`, wp.name);
+      formData.append(
+        `WorkPackages[${index}].Description`,
+        wp.description || ''
+      );
+      formData.append(`WorkPackages[${index}].Status`, wp.status);
+      if (wp.plannedStartDate) {
+        formData.append(
+          `WorkPackages[${index}].PlannedStartDate`,
+          wp.plannedStartDate
+        );
+      }
+      if (wp.plannedEndDate) {
+        formData.append(
+          `WorkPackages[${index}].PlannedEndDate`,
+          wp.plannedEndDate
+        );
+      }
+      if (wp.departmentId) {
+        formData.append(
+          `WorkPackages[${index}].DepartmentId`,
+          wp.departmentId.toString()
+        );
+      }
+  });
+}
+
+
+  private addNewWorkPackages(formData:FormData){
+    this.newWorkPackages.forEach((wp, index) => {
+      formData.append(`WorkPackages[${index}].Name`, wp.name);
+      formData.append(
+        `WorkPackages[${index}].Description`,
+        wp.description || ''
+      );
+      formData.append(`WorkPackages[${index}].Status`, wp.status);
+      if (wp.plannedStartDate) {
+        formData.append(
+          `WorkPackages[${index}].PlannedStartDate`,
+          wp.plannedStartDate
+        );
+      }
+      if (wp.plannedEndDate) {
+        formData.append(
+          `WorkPackages[${index}].PlannedEndDate`,
+          wp.plannedEndDate
+        );
+      }
+      if (wp.departmentId) {
+        formData.append(
+          `WorkPackages[${index}].DepartmentId`,
+          wp.departmentId.toString()
+        );
       }
     });
   }
@@ -537,9 +582,14 @@ export class ProjectDetailComponent implements OnInit {
   getFileIcon(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase();
     const icons: any = {
-      'pdf': '📄', 'doc': '📝', 'docx': '📝',
-      'xls': '📊', 'xlsx': '📊',
-      'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️'
+      pdf: '📄',
+      doc: '📝',
+      docx: '📝',
+      xls: '📊',
+      xlsx: '📊',
+      png: '🖼️',
+      jpg: '🖼️',
+      jpeg: '🖼️',
     };
     return icons[ext || ''] || '📎';
   }
@@ -564,7 +614,7 @@ export class ProjectDetailComponent implements OnInit {
   calculateDuration(): string {
     const start = this.projectForm.get('plannedStartDate')?.value;
     const end = this.projectForm.get('plannedEndDate')?.value;
-    
+
     if (start && end) {
       const diffTime = new Date(end).getTime() - new Date(start).getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -581,12 +631,12 @@ export class ProjectDetailComponent implements OnInit {
   calculateRemainingTime(): string {
     const endDate = this.projectForm.get('plannedEndDate')?.value;
     if (!endDate) return '-';
-    
+
     const now = new Date();
     const end = new Date(endDate);
     const diffTime = end.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return `${Math.abs(diffDays)} gün gecikme`;
     } else if (diffDays === 0) {
@@ -599,29 +649,37 @@ export class ProjectDetailComponent implements OnInit {
   getRemainingTimeClass(): string {
     const endDate = this.projectForm.get('plannedEndDate')?.value;
     if (!endDate) return '';
-    
+
     const now = new Date();
     const end = new Date(endDate);
     const diffTime = end.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'danger';
     if (diffDays <= 7) return 'warning';
     return 'success';
   }
 
   getPriorityLabel(): string {
-    const priority = this.priorities.find(p => p.value === this.projectForm.get('priority')?.value);
+    const priority = this.priorities.find(
+      (p) => p.value === this.projectForm.get('priority')?.value
+    );
     return priority?.label || 'Orta';
   }
 
   getStatusLabel(): string {
-    const status = this.statuses.find(s => s.value === this.projectForm.get('status')?.value);
+    const status = this.statuses.find(
+      (s) => s.value === this.projectForm.get('status')?.value
+    );
     return status?.label || 'Başlatılmadı';
   }
 
   deleteProject() {
-    if (confirm(`"${this.project?.name}" projesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`)) {
+    if (
+      confirm(
+        `"${this.project?.name}" projesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`
+      )
+    ) {
       this.projectService.deleteProject(this.projectId).subscribe({
         next: () => {
           alert('Proje başarıyla silindi!');
@@ -630,21 +688,21 @@ export class ProjectDetailComponent implements OnInit {
         error: (error) => {
           console.error('Proje silinirken hata:', error);
           alert('Proje silinirken bir hata oluştu.');
-        }
+        },
       });
     }
   }
 
   copyProjectInfo() {
     const projectInfo = `
-Proje: ${this.project?.name}
-Açıklama: ${this.project?.description || 'Yok'}
-Durum: ${this.project?.status}
-Öncelik: ${this.getPriorityLabel()}
-Başlangıç: ${this.formatDate(this.project?.plannedStartDate)}
-Bitiş: ${this.formatDate(this.project?.plannedEndDate)}
-Bütçe: ${this.formatCurrency(this.project?.budget)}
-    `.trim();
+  Proje: ${this.project?.name}
+  Açıklama: ${this.project?.description || 'Yok'}
+  Durum: ${this.project?.status}
+  Öncelik: ${this.getPriorityLabel()}
+  Başlangıç: ${this.formatDate(this.project?.plannedStartDate)}
+  Bitiş: ${this.formatDate(this.project?.plannedEndDate)}
+  Bütçe: ${this.formatCurrency(this.project?.budget)}
+      `.trim();
 
     navigator.clipboard.writeText(projectInfo).then(() => {
       alert('Proje bilgileri panoya kopyalandı!');

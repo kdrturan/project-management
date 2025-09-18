@@ -9,6 +9,7 @@ import { TaskService } from '../../../task/services/task.service';
 import { ProjectService } from '../../../project/services/project-service.service';
 import { UserService } from '../../../user/services/user.service';
 import { WorkpackageService } from '../../../workPackage/services/workpackage.service';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'app-task-create',
@@ -21,7 +22,8 @@ export class TaskCreateComponent implements OnInit {
   taskForm!: FormGroup;
   isLoading = false;
   isSubmitting = false;
-
+  departmentId?:number
+  
   // Dropdown verileri
   projects: any[] = [];
   workPackages: any[] = [];
@@ -54,8 +56,15 @@ export class TaskCreateComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.initializeForm();
-    this.loadDropdownData();
+    this.authService.currentUser$
+    .pipe(filter(Boolean), take(1))
+    .subscribe(() => {
+      this.departmentId = this.authService.getUserDepartmentId();
+      this.initializeForm();
+      this.loadDropdownData();
+    });
+
+
   }
 
   initializeForm() {
@@ -101,7 +110,7 @@ export class TaskCreateComponent implements OnInit {
     });
 
     // Kullanıcılar
-    this.userService.getUsers().subscribe({
+    this.userService.getUsersByDepartment(this.departmentId ?? 0).subscribe({
       next: (response) => {
         this.users = response.data || [];
         this.isLoading = false;
@@ -115,7 +124,7 @@ export class TaskCreateComponent implements OnInit {
   }
 
    loadWorkPackages(projectId: number) {
-     this.workpackageService.getWorkPackagesByProjectId(projectId).subscribe({
+     this.workpackageService.getWorkPackagesByProjectAndDepartmentId(projectId, this.departmentId ?? 0).subscribe({
        next: (response) => {
          this.workPackages = response.data || [];
        },
@@ -152,7 +161,6 @@ export class TaskCreateComponent implements OnInit {
 
     this.taskService.createTask(taskData).subscribe({
       next: (response) => {
-        console.log('Görev başarıyla oluşturuldu:', response);
         this.showSuccessMessage('Görev başarıyla oluşturuldu!');
         
         // 2 saniye sonra görev listesine yönlendir
@@ -261,7 +269,6 @@ export class TaskCreateComponent implements OnInit {
 
   // Message helpers
   private showSuccessMessage(message: string) {
-    console.log('Success:', message);
     alert(message);
   }
 

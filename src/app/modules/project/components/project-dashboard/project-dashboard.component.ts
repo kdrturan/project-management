@@ -123,28 +123,15 @@ export class ProjectDashboardComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    console.log('Backend\'den projeler yükleniyor...');
     let userId = this.authService.getCurrentUserId() || 0;
     this.projectService.getProjectsByOwner(userId).subscribe({
-      next: (response) => {
-        console.log('Backend API Response:', response);
-        
+      next: (response) => {        
         let backendProjects: Project[] = [];
         
-        // Backend response formatını kontrol et
-        if (response && Array.isArray(response)) {
-          // Eğer response direkt array ise
-          backendProjects = this.processBackendProjects(response);
-        } else if (response && response.data && Array.isArray(response.data)) {
-          // Eğer response.data array ise
-          backendProjects = this.processBackendProjects(response.data);
-        } else {
-          console.warn('Beklenmeyen API response formatı:', response);
-        }
-
-        // Backend ve mock verileri birleştir
-        this.combineProjectsData(backendProjects);
-        
+        backendProjects = this.processBackendProjects(response.data);
+        this.projects = [...backendProjects];
+        this.applyCurrentFilter();
+        this.calculateStats();
         this.isLoading = false;
       },
       error: (error) => {
@@ -161,7 +148,6 @@ export class ProjectDashboardComponent implements OnInit {
     });
   }
 
-  // Backend'den gelen projeleri işle (tarih formatları vs.)
   private processBackendProjects(backendData: any[]): Project[] {
     return backendData.map(project => ({
       ...project,
@@ -170,34 +156,6 @@ export class ProjectDashboardComponent implements OnInit {
       actualStartDate: project.actualStartDate ? new Date(project.actualStartDate) : undefined,
       actualEndDate: project.actualEndDate ? new Date(project.actualEndDate) : undefined
     }));
-  }
-
-  // Backend ve mock verileri birleştir
-  private combineProjectsData(backendProjects: Project[]) {
-    console.log(`Backend\'den ${backendProjects.length} proje alındı`);
-    
-    // Backend verileri ile başla
-    this.projects = [...backendProjects];
-    
-    // Eğer backend'den veri gelmemişse mock verileri ekle
-    if (backendProjects.length === 0) {
-      console.log('Backend\'den veri gelmedi, mock veriler kullanılıyor');
-      this.projects = [...this.mockProjects];
-    } else {
-      // Backend verileri varsa, mock verileri de ekle (farklı ID'lerde)
-      const maxBackendId = Math.max(...backendProjects.map(p => p.id));
-      const mockProjectsWithNewIds = this.mockProjects.map(mockProject => ({
-        ...mockProject,
-        id: maxBackendId + mockProject.id, // ID çakışmasını önle
-        name: `[Mock] ${mockProject.name}` // Mock olduğunu belirt
-      }));
-      
-      this.projects = [...backendProjects, ...mockProjectsWithNewIds];
-      console.log(`Toplam ${this.projects.length} proje yüklendi (${backendProjects.length} backend + ${mockProjectsWithNewIds.length} mock)`);
-    }
-
-    this.applyCurrentFilter();
-    this.calculateStats();
   }
 
   // Mevcut filtreyi uygula
@@ -232,10 +190,10 @@ export class ProjectDashboardComponent implements OnInit {
     } else {
       // Status'a göre filtreleme
       const statusMap: { [key: string]: string } = {
-        'active': 'Aktif',
-        'completed': 'Tamamlandı',
-        'overdue': 'Gecikmiş',
-        'planning': 'Planlama'
+        'Aktif': 'Aktif',
+        'Tamamlandı': 'Tamamlandı',
+        'Gecikmiş': 'Gecikmiş',
+        'Planlama': 'Planlama'
       };
       
       this.filteredProjects = this.projects.filter(project => 
@@ -268,24 +226,12 @@ export class ProjectDashboardComponent implements OnInit {
 
   getFilterMessage(filter: string): string {
     const messages: { [key: string]: string } = {
-      'active': 'Şu anda aktif olan proje bulunmuyor.',
-      'completed': 'Tamamlanmış proje bulunmuyor.',
-      'overdue': 'Geciken proje bulunmuyor.',
-      'planning': 'Planlama aşamasında proje bulunmuyor.'
+      'Aktif': 'Şu anda aktif olan proje bulunmuyor.',
+      'Tamamlandı': 'Tamamlanmış proje bulunmuyor.',
+      'Gecikmiş': 'Geciken proje bulunmuyor.',
+      'Planlama': 'Planlama aşamasında proje bulunmuyor.'
     };
     return messages[filter] || 'Proje bulunamadı.';
   }
 
-  // Mock team data - gerçek projede backend'den gelecek
-  getProjectTeam(projectId: number): string[] {
-    const teamData: { [key: number]: string[] } = {
-      1: ['AY', 'MK', 'SB', '+2'],
-      2: ['EK', 'TY', '+1'],
-      3: ['DB', 'FG'],
-      4: ['NK', 'PL', 'QM'],
-      5: ['RT', 'SW'],
-      6: ['UV', 'XY', 'ZA']
-    };
-    return teamData[projectId] || ['?'];
-  }
 }

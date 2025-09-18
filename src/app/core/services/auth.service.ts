@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { User } from '../../modules/teamManagement/models/user';
 import { ResponseModel } from '../models/responseModel';
 import { DataResponseModel } from '../models/dataResponseModel';
+import { environment } from '../../../environments/devEnvironments';
 
 interface LoginRequest {
   email: string;
@@ -20,7 +21,7 @@ interface LoginRequest {
   providedIn: 'root',
 })
 export class AuthService{
-  private apiUrl = 'http://localhost:7041/api';
+  private apiUrl = `${environment.apiUrl}`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private isAuthenticated = false;
@@ -62,7 +63,6 @@ export class AuthService{
             this.setUserSession(response.data);
             return response.data;
           } else {
-                      console.log('/*/*/*/*/*/*/*/*Session check failed:');
             this.clearSession();
             return null;
           }
@@ -78,14 +78,12 @@ export class AuthService{
 
   // Logout
 logout(): Observable<any> {
-  console.log('🚪 Logout initiated');
   
   // Backend'e logout isteği gönder ÖNCE
   return this.http.post(`${this.apiUrl}/auth/logout`, {}, {
     withCredentials: true
   }).pipe(
     map((response) => {
-      console.log('🚪 Backend logout response:', response);
       this.clearSession(); // Backend başarılı olduktan sonra temizle
       return response;
     }),
@@ -96,7 +94,6 @@ logout(): Observable<any> {
       return of({ success: true });
     }),
     finalize(() => {
-      console.log('🚪 Logout completed, navigating to login');
       this.navigateToLogin();
     })
   );
@@ -105,7 +102,6 @@ logout(): Observable<any> {
 // 2. clearSession metodunu güncelleyin
 
   forceLogout(): void {
-    console.log('🚪 Force logout - clearing all data');
     
     // Session state'i temizle
     this.currentUserSubject.next(null);
@@ -120,24 +116,19 @@ logout(): Observable<any> {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
     });
     
-    console.log('🚪 All data cleared');
   }
 
     private navigateToLogin(): void {
-    console.log('🚪 Navigating to login page');
     
     // Router'ı kullanarak yönlendir
     this.router.navigate(['/login']).then(
       (success) => {
-        console.log('🚪 Navigation success:', success);
         if (!success) {
           // Router navigation başarısızsa window.location kullan
-          console.log('🚪 Router failed, using window.location');
           window.location.href = '/login';
         }
       },
       (error) => {
-        console.error('🚪 Navigation error:', error);
         // Hata durumunda window.location kullan
         window.location.href = '/login';
       }
@@ -148,7 +139,6 @@ logout(): Observable<any> {
     this.currentUserSubject.next(user);
     this.isAuthenticated = true;
 
-    console.log('🔐 User session set:', user);
     // Local storage'a sadece non-sensitive bilgileri kaydet
     localStorage.setItem('currentUserId', user.id.toString());
     localStorage.setItem('userRole', user.role);
@@ -156,15 +146,12 @@ logout(): Observable<any> {
 
 
 quickLogout(): void {
-  console.log('Quick logout - no HTTP request');
   this.clearSession();
   this.router.navigate(['/login']);
 }
 
 
-private clearSession(): void {
-  console.log('🚪 Clearing session data');
-  
+private clearSession(): void {  
   this.currentUserSubject.next(null);
   this.isAuthenticated = false;
 
@@ -175,12 +162,9 @@ private clearSession(): void {
   localStorage.removeItem('demoLoginTime');
   sessionStorage.removeItem('demoUser');
   sessionStorage.removeItem('demoLoginTime');
-  
-  console.log('🚪 Session data cleared');
-}
+  }
 
 demoLogout(): void {
-  console.log('🚪 Demo logout initiated');
   this.clearSession();
   this.navigateToLogin();
 }
@@ -224,14 +208,6 @@ isLoggedIn(): boolean {
   const hasUser = !!this.currentUserSubject.value;
   
   const result = isAuth || hasDemo || hasUser;
-  
-  console.log('🔐 isLoggedIn check:', {
-    isAuthenticated: isAuth,
-    hasDemoSession: hasDemo,
-    hasCurrentUser: hasUser,
-    finalResult: result
-  });
-  
   return result;
 }
 
@@ -257,6 +233,11 @@ isLoggedIn(): boolean {
   getUserRole(): string | null {
     const user = this.getCurrentUser();
     return user ? user.role : null;
+  }
+
+  getUserDepartmentId(): number {
+    const user = this.getCurrentUser();
+    return user?.departmentId ?? 0;
   }
 
   isAdmin(): boolean {

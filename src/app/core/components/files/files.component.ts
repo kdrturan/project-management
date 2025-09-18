@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FileItem } from '../../models/fileItem';
 import { Project } from '../../../modules/project/models/project';
+import { AuthService } from '../../services/auth.service';
+import { filter, take } from 'rxjs';
 
 
 @Component({
@@ -30,7 +32,7 @@ export class FilesComponent implements OnInit {
   searchTerm: string = '';
   selectedFileType: string = '';
   selectedProject: string = '';
-
+  userId?:number | null;
   // View Settings
   viewMode: 'grid' | 'list' = 'grid';
   
@@ -64,12 +66,19 @@ export class FilesComponent implements OnInit {
 
   constructor(
     private fileService: FileService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadFiles();
-    this.loadProjects();
+    this.authService.currentUser$
+    .pipe(filter(Boolean), take(1))
+    .subscribe(() => {
+      this.userId = this.authService.getCurrentUserId();
+      this.loadFiles();
+      this.loadProjects();
+    });
+
   }
 
   // Data Loading Methods
@@ -95,13 +104,9 @@ loadFiles() {
 loadProjects() {
     this.isLoading = true;
     this.error = null;
-
-    console.log('Backend\'den projeler yükleniyor...');
-    
-    this.projectService.getProjects().subscribe({
+    this.projectService.getProjectsByOwner(this.userId ?? 0).subscribe({
       next: (response) => {
-        console.log('Backend API Response:', response);
-        
+
         let backendProjects: Project[] = [];
         
         // Backend response formatını kontrol et
@@ -303,7 +308,6 @@ loadProjects() {
 
   previewFile(file: FileItem): void {
     // Önizleme modalı açılabilir veya yeni sekmede açılabilir
-    console.log('Previewing file:', file);
     // this.router.navigate(['/files/preview', file.id]);
   }
 
@@ -321,7 +325,6 @@ loadProjects() {
     
     this.fileService.deleteFile(this.fileToDelete.id).subscribe({
       next: (response) => {
-        console.log('Dosya silindi:', response);  
       this.files = this.files.filter(f => f.id !== this.fileToDelete!.id);
       this.calculateStats();
       this.applyFilters();

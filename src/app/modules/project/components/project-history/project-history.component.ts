@@ -23,10 +23,10 @@ projectForm!: FormGroup;
   fileProjectId!: number;
 
   priorities = [
-    { value: 'low', label: 'Düşük', color: '#4CAF50' },
-    { value: 'medium', label: 'Orta', color: '#ff9800' },
-    { value: 'high', label: 'Yüksek', color: '#f44336' },
-    { value: 'critical', label: 'Kritik', color: '#9c27b0' }
+    { value: 'Düşük', label: 'Düşük', color: '#4CAF50' },
+    { value: 'Orta', label: 'Orta', color: '#ff9800' },
+    { value: 'Yüksek', label: 'Yüksek', color: '#f44336' },
+    { value: 'Kritik', label: 'Kritik', color: '#9c27b0' }
   ];
 
   statuses = [

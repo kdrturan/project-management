@@ -19,29 +19,22 @@ export class AuthGuard implements CanActivate {
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): Observable<boolean> | boolean {
-    
-    console.log('AuthGuard checking:', state.url);
-    
+  ): Observable<boolean> | boolean {    
     // Login sayfasına gidiyorsa direkt izin ver
     if (state.url === '/login') {
-      console.log('Login page access allowed');
       return true;
     }
     
     // Zaten kontrol yapılıyorsa bekle ve tekrar dene
     if (this.isCheckingAuth) {
-      console.log('Auth check already in progress, waiting...');
       return this.waitForAuthCheck();
     }
     
     // Önce local authentication durumunu kontrol et
     if (this.authService.isLoggedIn()) {
-      console.log('User already authenticated locally');
       return true;
     }
 
-    console.log('Starting auth check...');
     this.isCheckingAuth = true;
     
     return this.authService.checkSession().pipe(
@@ -51,7 +44,6 @@ export class AuthGuard implements CanActivate {
         if (user) {
           return true;
         } else {
-          console.log('No valid session, redirecting to login');
           this.router.navigate(['/login'], { 
             queryParams: { returnUrl: state.url }
           });
@@ -67,7 +59,6 @@ export class AuthGuard implements CanActivate {
       }),
       finalize(() => {
         // Her durumda flag'i resetle
-        console.log('Auth check completed, resetting flag');
         this.isCheckingAuth = false;
       })
     );
