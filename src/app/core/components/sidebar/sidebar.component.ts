@@ -45,11 +45,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   // Role kontrolü metodları
   isProjectManager(): boolean {
-    return this.userRole === 'ProjectManager' || this.userRole === 'admin';
+    return this.userRole === 'ProjectManager' || this.userRole === 'Admin';
   }
 
   isTechnicalManager(): boolean {
-    return this.userRole === 'TechnicalManager' || this.userRole === 'admin';
+    return this.userRole === 'TechnicalManager' || this.userRole === 'Admin';
   }
 
   isAdmin(): boolean {
@@ -57,7 +57,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isDeveloper(): boolean {
-    return this.userRole === 'Developer' || this.userRole === 'admin';
+    return this.userRole === 'Developer' || this.userRole === 'Admin';
   }
 
   // Menü görünürlük kontrolleri

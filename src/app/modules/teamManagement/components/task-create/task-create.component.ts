@@ -171,10 +171,10 @@ export class TaskCreateComponent implements OnInit {
   onCancel() {
     if (this.taskForm.dirty) {
       if (confirm('Değişiklikler kaydedilmedi. Sayfadan ayrılmak istediğinizden emin misiniz?')) {
-        this.router.navigate(['/tasks/my-tasks']);
+        this.router.navigate(['/team-management']);
       }
     } else {
-      this.router.navigate(['/tasks/my-tasks']);
+      this.router.navigate(['/team-management']);
     }
   }
 

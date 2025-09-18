@@ -28,7 +28,7 @@ export class AdminGuard implements CanActivate {
     // Admin kontrolü
     return this.authService.checkSession().pipe(
       map(user => {
-        if (user && user.role === 'admin') {
+        if (user && user.role === 'Admin') {
           return true;
         } else {
           // Admin değilse projects'e yönlendir

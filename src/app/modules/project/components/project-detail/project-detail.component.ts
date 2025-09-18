@@ -1,15 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService } from '../../services/project-service.service';
 import { FileService } from '../../../../core/services/file.service';
+import { WorkPackage } from '../../../workPackage/models/workPackage';
+import { createWorkPackageDto } from '../../../workPackage/models/createWorkPackageDto';
+import { DepartmentService } from '../../../departments/services/department.service';
+import { DepartmentDto } from '../../../departments/models/departmentsDto';
+import { WorkpackageService } from '../../../workPackage/services/workpackage.service';
+import { UpdateWorkPackageDto } from '../../../workPackage/models/updateWorkPackageDto';
+
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']
 })
@@ -18,15 +25,27 @@ export class ProjectDetailComponent implements OnInit {
   project: any = null;
   projectFiles: any[] = [];
   newFiles: any[] = [];
+  projectWorkPackages: WorkPackage[] = [];
+  newWorkPackages: createWorkPackageDto[] = [];
   isEditMode = false;
   isLoading = false;
   projectId!: number;
+  departments: DepartmentDto[] = [];
+
+  // Yeni eklenen değişkenler - İş paketi düzenleme için
+  editingWorkPackages: { [key: number]: boolean } = {}; // Hangi iş paketinin düzenlendiğini takip eder
+  editedWorkPackages: { [key: number]: any } = {}; // Düzenlenen iş paketlerinin verilerini tutar
+  updatedWorkPackages: UpdateWorkPackageDto[] = []; // Güncellenen iş paketlerini tutar
+
+  // Expandable sections state
+  isFilesSectionExpanded = false;
+  isWorkPackagesSectionExpanded = false;
 
   priorities = [
-    { value: 'low', label: 'Düşük', color: '#4CAF50' },
-    { value: 'medium', label: 'Orta', color: '#ff9800' },
-    { value: 'high', label: 'Yüksek', color: '#f44336' },
-    { value: 'critical', label: 'Kritik', color: '#9c27b0' }
+    { value: 'Düşük', label: 'Düşük', color: '#4CAF50' },
+    { value: 'Orta', label: 'Orta', color: '#ff9800' },
+    { value: 'Yüksek', label: 'Yüksek', color: '#f44336' },
+    { value: 'Kritik', label: 'Kritik', color: '#9c27b0' }
   ];
 
   statuses = [
@@ -37,26 +56,55 @@ export class ProjectDetailComponent implements OnInit {
     { value: 'İptal Edildi', label: 'İptal Edildi' }
   ];
 
-  projectHistory: any[] = [];
-
-  recentActivities: any[] = [
-    { icon: '📝', description: 'Proje oluşturuldu', date: new Date() },
-    { icon: '📎', description: 'Dosya eklendi', date: new Date() },
-    { icon: '✏️', description: 'Proje güncellendi', date: new Date() }
+  workPackageStatuses = [
+    { value: 'Başlatılmadı', label: 'Başlatılmadı' },
+    { value: 'Devam Ediyor', label: 'Devam Ediyor' },
+    { value: 'Tamamlandı', label: 'Tamamlandı' },
+    { value: 'Beklemede', label: 'Beklemede' }
   ];
+
+  projectHistory: any[] = [];
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private projectService: ProjectService,
-    private fileService: FileService
+    private fileService: FileService,
+    private departmnetService: DepartmentService,
+    private workPackageService: WorkpackageService
   ) {}
 
   ngOnInit() {
     this.initializeForm();
     this.getProjectId();
+    this.getProjectWorkPackes();
+    this.getDepartments();
     this.loadProject();
+  }
+
+  getProjectWorkPackes() {
+    this.workPackageService.getWorkPackagesByProjectId(this.projectId).subscribe({
+      next: (response) => { 
+        this.projectWorkPackages = response.data || [];
+        console.log('Response iş paketleri:', response);
+        console.log('Yüklenen iş paketleri:', this.projectWorkPackages);
+      },
+      error: (error) => {
+        console.error('İş paketleri yüklenirken hata oluştu:', error);
+      }
+    });
+  }
+
+  getDepartments() {
+    this.departmnetService.getAllDepartments().subscribe({
+      next: (response) => { 
+        this.departments = response.data || [];
+      },
+      error: (error) => {
+        console.error('Departmanlar yüklenirken hata oluştu:', error);
+      }
+    });
   }
 
   initializeForm() {
@@ -77,10 +125,157 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
+  // Expandable sections toggle functions
+  toggleFilesSection() {
+    this.isFilesSectionExpanded = !this.isFilesSectionExpanded;
+  }
+
+  toggleWorkPackagesSection() {
+    this.isWorkPackagesSectionExpanded = !this.isWorkPackagesSectionExpanded;
+  }
+
+  // Add files button click handler
+  addFiles(event: Event) {
+    event.stopPropagation();
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  // Add work package button click handler
+  addWorkPackage(event: Event) {
+    event.stopPropagation();
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    const newWorkPackage: createWorkPackageDto = {
+      name: '',
+      description: '',
+      status: 'Başlatılmadı',
+      plannedStartDate: today,
+      plannedEndDate: today,
+      departmentId: 0
+    };
+
+    this.newWorkPackages.push(newWorkPackage);
+  }
+
+  // Remove new work package
+  removeNewWorkPackage(index: number) {
+    this.newWorkPackages.splice(index, 1);
+  }
+
+  // YENİ METODLAR - İş paketi düzenleme için
+  
+  // İş paketi düzenleme modunu başlat
+  startEditingWorkPackage(workPackage: WorkPackage, index: number) {
+    this.editingWorkPackages[index] = true;
+    
+    // Mevcut değerleri kopyala
+    this.editedWorkPackages[index] = {
+      id: workPackage.id,
+      name: workPackage.name,
+      description: workPackage.description,
+      status: workPackage.status,
+      plannedStartDate: this.formatDateForInput(workPackage.plannedStartDate || ''),
+      plannedEndDate: this.formatDateForInput(workPackage.plannedEndDate || ''),
+      departmentId: this.getDepartmentIdByName(workPackage.departmentName || '')
+    };
+  }
+
+  // İş paketi düzenlemeyi iptal et
+  cancelEditingWorkPackage(index: number) {
+    delete this.editingWorkPackages[index];
+    delete this.editedWorkPackages[index];
+  }
+
+  // Düzenlenen iş paketini kaydet
+  saveEditedWorkPackage(index: number) {
+    const editedWp = this.editedWorkPackages[index];
+    
+    // Validasyon
+    if (!editedWp.name || editedWp.name.trim() === '') {
+      alert('İş paketi adı zorunludur.');
+      return;
+    }
+
+    // updatedWorkPackages dizisine ekle
+    const updatedWorkPackage = {
+      id: editedWp.id,
+      name: editedWp.name,
+      description: editedWp.description || '',
+      status: editedWp.status,
+      plannedStartDate: editedWp.plannedStartDate,
+      plannedEndDate: editedWp.plannedEndDate,
+      departmentId: editedWp.departmentId
+    };
+
+    // Daha önce bu iş paketi güncellenmiş mi kontrol et
+    const existingIndex = this.updatedWorkPackages.findIndex(wp => wp.id === editedWp.id);
+    if (existingIndex !== -1) {
+      this.updatedWorkPackages[existingIndex] = updatedWorkPackage;
+    } else {
+      this.updatedWorkPackages.push(updatedWorkPackage);
+    }
+
+    // Düzenleme modundan çık
+    delete this.editingWorkPackages[index];
+    delete this.editedWorkPackages[index];
+    
+    alert('İş paketi değişiklikleri kaydedildi. Projeyi kaydetmeyi unutmayın!');
+  }
+
+  // İş paketini sil
+  deleteWorkPackage(workPackage: WorkPackage, index: number) {
+    if (confirm(`"${workPackage.name}" iş paketini silmek istediğinizden emin misiniz?`)) {
+
+      this.workPackageService.deleteWorkPackage(workPackage.id || 0).subscribe({
+        next: (response) => {
+          console.log("İş paketi başarıyla silindi.");
+          // UI'dan kaldır
+          this.projectWorkPackages.splice(index, 1);
+          alert('İş paketi silindi. Projeyi kaydetmeyi unutmayın!');
+        },
+        error: (error) => {
+          console.log("İş silinirken bir hata oluştu.");
+        }
+      })
+
+    }
+  }
+
+  // Departman adından ID'yi bul
+  getDepartmentIdByName(departmentName: string): number {
+    const department = this.departments.find(d => d.name === departmentName);
+    return department ? department.id : 0;
+  }
+
+  // Work package status class
+  getWorkPackageStatusClass(status: string): string {
+    const statusClasses: { [key: string]: string } = {
+      'Başlatılmadı': 'wp-status-not-started',
+      'Devam Ediyor': 'wp-status-in-progress',
+      'Tamamlandı': 'wp-status-completed',
+      'Beklemede': 'wp-status-on-hold'
+    };
+    return statusClasses[status] || '';
+  }
+
+  // Work package status label
+  getWorkPackageStatusLabel(status: string): string {
+    const statusLabels: { [key: string]: string } = {
+      'Başlatılmadı': 'Başlatılmadı',
+      'Devam Ediyor': 'Devam Ediyor',
+      'Tamamlandı': 'Tamamlandı',
+      'Beklemede': 'Beklemede'
+    };
+    return statusLabels[status] || status;
+  }
 
   routeHistory(historyId: number) {
     console.log('Navigating to history ID:', historyId);
-  this.router.navigate([`/projects/${this.projectId}/history/${historyId}`]);
+    this.router.navigate([`/projects/${this.projectId}/history/${historyId}`]);
   }
 
   loadProject() {
@@ -90,7 +285,7 @@ export class ProjectDetailComponent implements OnInit {
         this.project = response.data;
         this.populateForm();
         this.loadProjectFiles();
-        this.loadProjectHistory(); // Proje geçmişini yükle
+        this.loadProjectHistory();
         this.isLoading = false;
       },
       error: (error) => {
@@ -154,38 +349,6 @@ export class ProjectDetailComponent implements OnInit {
     return icons[changeType] || '📋';
   }
 
-  getChangeDescription(historyItem: any): string {
-    const changeType = historyItem.changeType;
-    const oldValue = historyItem.oldValue;
-    const newValue = historyItem.newValue;
-    const userName = historyItem.changedByUserName || 'Kullanıcı';
-
-    switch (changeType) {
-      case 'Created':
-        return `${userName} tarafından proje oluşturuldu`;
-      case 'Updated':
-        return `${userName} tarafından proje güncellendi`;
-      case 'StatusChanged':
-        return `${userName} durumu "${oldValue}" den "${newValue}" ye değiştirdi`;
-      case 'PriorityChanged':
-        return `${userName} önceliği "${oldValue}" den "${newValue}" ye değiştirdi`;
-      case 'BudgetChanged':
-        return `${userName} bütçeyi ${this.formatCurrency(parseFloat(oldValue))} den ${this.formatCurrency(parseFloat(newValue))} ye değiştirdi`;
-      case 'NameChanged':
-        return `${userName} proje adını "${oldValue}" den "${newValue}" ye değiştirdi`;
-      case 'DescriptionChanged':
-        return `${userName} proje açıklamasını güncelledi`;
-      case 'DateChanged':
-        return `${userName} proje tarihlerini güncelledi`;
-      case 'FileAdded':
-        return `${userName} "${newValue}" dosyasını ekledi`;
-      case 'FileDeleted':
-        return `${userName} "${oldValue}" dosyasını sildi`;
-      default:
-        return `${userName} tarafından ${historyItem.fieldName} alanı güncellendi`;
-    }
-  }
-
   formatDateForInput(dateString: string): string {
     if (!dateString) return '';
     return new Date(dateString).toISOString().split('T')[0];
@@ -194,8 +357,12 @@ export class ProjectDetailComponent implements OnInit {
   toggleEditMode() {
     this.isEditMode = !this.isEditMode;
     if (!this.isEditMode) {
-      this.populateForm(); // İptal edildiğinde formu eski haline getir
-      this.newFiles = []; // Yeni dosyaları temizle
+      this.populateForm();
+      this.newFiles = [];
+      this.newWorkPackages = [];
+      this.updatedWorkPackages = [];
+      this.editingWorkPackages = {};
+      this.editedWorkPackages = {};
     }
   }
 
@@ -203,12 +370,16 @@ export class ProjectDetailComponent implements OnInit {
     this.isEditMode = false;
     this.populateForm();
     this.newFiles = [];
+    this.newWorkPackages = [];
+    this.updatedWorkPackages = [];
+    this.editingWorkPackages = {};
+    this.editedWorkPackages = {};
   }
 
   onFileSelected(event: any) {
     const files = event.target.files;
     for (let file of files) {
-      if (file.size <= 10 * 1024 * 1024) { // 10MB
+      if (file.size <= 10 * 1024 * 1024) {
         this.newFiles.push({
           name: file.name,
           size: file.size,
@@ -260,70 +431,102 @@ export class ProjectDetailComponent implements OnInit {
       return;
     }
 
+    // Yeni iş paketleri için validasyon
+    for (let i = 0; i < this.newWorkPackages.length; i++) {
+      const wp = this.newWorkPackages[i];
+      if (!wp.name || wp.name.trim() === '') {
+        alert(`${i + 1}. iş paketi için ad zorunludur.`);
+        console.log('Invalid work package:', wp);
+        return;
+      }
+    }
+
     this.isLoading = true;
     const formValue = this.projectForm.value;
+    const formData = new FormData();
 
-    // Eğer sadece proje bilgileri değiştiyse ve yeni dosya yoksa JSON gönder
-    if (this.newFiles.length === 0) {
-      const projectData = {
-        id: this.projectId,
-        name: formValue.name,
-        description: formValue.description || '',
-        plannedStartDate: formValue.plannedStartDate,
-        plannedEndDate: formValue.plannedEndDate,
-        priority: formValue.priority,
-        status: formValue.status,
-        budget: formValue.budget || 0
-      };
-
-      this.projectService.updateProjectInfo(projectData).subscribe({
-        next: (response) => {
-          alert('Proje bilgileri başarıyla güncellendi!');
-          this.isEditMode = false;
-          this.loadProject();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Proje güncellenirken hata oluştu:', error);
-          alert('Proje güncellenirken bir hata oluştu.');
-          this.isLoading = false;
-        }
-      });
-    } else {
-      // Yeni dosya varsa FormData ile gönder
-      const formData = new FormData();
-      formData.append('Id', this.projectId.toString());
-      formData.append('Name', formValue.name);
-      formData.append('Description', formValue.description || '');
-      formData.append('PlannedStartDate', formValue.plannedStartDate);
-      formData.append('PlannedEndDate', formValue.plannedEndDate);
-      formData.append('Priority', formValue.priority);
-      formData.append('Status', formValue.status);
-      
-      if (formValue.budget) {
-        formData.append('Budget', formValue.budget.toString());
-      }
-
-      // Yeni dosyaları ekle
+    if (this.newFiles.length > 0) {
       this.newFiles.forEach((fileObj) => {
         formData.append('Files', fileObj.file);
       });
-
-      this.projectService.updateProject(formData).subscribe({
-        next: (response) => {
-          alert('Proje başarıyla güncellendi!');
-          this.isEditMode = false;
-          this.newFiles = [];
-          this.loadProject();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Proje güncellenirken hata oluştu:', error);
-          alert('Proje güncellenirken bir hata oluştu.');
-          this.isLoading = false;
-        }
-      });
     }
+    
+    formData.append('Id', this.projectId.toString());
+    formData.append('Name', formValue.name);
+    formData.append('Description', formValue.description || '');
+    formData.append('PlannedStartDate', formValue.plannedStartDate);
+    formData.append('PlannedEndDate', formValue.plannedEndDate);
+    formData.append('Priority', formValue.priority);
+    formData.append('Status', formValue.status);
+
+    if (formValue.budget) {
+      formData.append('Budget', formValue.budget.toString());
+    }
+
+    // Yeni iş paketlerini ekle
+    this.newWorkPackages.forEach((wp, index) => {
+      formData.append(`WorkPackages[${index}].Name`, wp.name);
+      formData.append(`WorkPackages[${index}].Description`, wp.description || '');
+      formData.append(`WorkPackages[${index}].Status`, wp.status);
+      if (wp.plannedStartDate) {
+        formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
+      }
+      if (wp.plannedEndDate) {
+        formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
+      }
+      if (wp.departmentId) {
+        formData.append(`WorkPackages[${index}].DepartmentId`, wp.departmentId.toString());
+      }
+    });
+
+    // Güncellenen/silinen iş paketlerini ekle
+    this.updatedWorkPackages.forEach((wp, index) => {
+      if (wp.isDeleted) {
+        formData.append(`WorkPackages[${index}].Id`, wp.id != null ? wp.id.toString() : '');
+      } else {
+        formData.append(`WorkPackages[${index}].Id`, wp.id != null ? wp.id.toString() : '');
+        formData.append(`WorkPackages[${index}].Name`, wp.name);
+        formData.append(`WorkPackages[${index}].Description`, wp.description || '');
+        formData.append(`WorkPackages[${index}].Status`, wp.status);
+        if (wp.plannedStartDate) {
+          formData.append(`WorkPackages[${index}].PlannedStartDate`, wp.plannedStartDate);
+        }
+        if (wp.plannedEndDate) {
+          formData.append(`WorkPackages[${index}].PlannedEndDate`, wp.plannedEndDate);
+        }
+        if (wp.departmentId) {
+          formData.append(`WorkPackages[${index}].DepartmentId`, wp.departmentId.toString());
+        }
+      }
+    });
+
+    this.projectService.updateProject(formData).subscribe({
+      next: (response) => {
+        let successMessage = 'Proje başarıyla güncellendi!';
+        if (this.newWorkPackages.length > 0) {
+          successMessage += ` ${this.newWorkPackages.length} yeni iş paketi eklendi.`;
+        }
+        if (this.updatedWorkPackages.length > 0) {
+          successMessage += ` ${this.updatedWorkPackages.length} iş paketi güncellendi.`;
+        }
+        
+        alert(successMessage);
+        this.isEditMode = false;
+        this.newFiles = [];
+        this.newWorkPackages = [];
+        this.updatedWorkPackages = [];
+        this.editingWorkPackages = {};
+        this.editedWorkPackages = {};
+        this.loadProject();
+        this.getProjectWorkPackes();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Proje güncellenirken hata oluştu:', error);
+        alert('Proje güncellenirken bir hata oluştu.');
+        this.isLoading = false;
+      }
+    });
   }
 
   goBack() {
@@ -349,7 +552,7 @@ export class ProjectDetailComponent implements OnInit {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  formatDate(dateStr: string | Date): string {
+  formatDate(dateStr: string | Date | undefined): string {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('tr-TR');
   }
@@ -407,18 +610,6 @@ export class ProjectDetailComponent implements OnInit {
     return 'success';
   }
 
-  getProgressPercentage(): number {
-    const status = this.projectForm.get('status')?.value;
-    const statusProgress: any = {
-      'Başlatılmadı': 0,
-      'Devam Ediyor': 50,
-      'Beklemede': 30,
-      'Tamamlandı': 100,
-      'İptal Edildi': 0
-    };
-    return statusProgress[status] || 0;
-  }
-
   getPriorityLabel(): string {
     const priority = this.priorities.find(p => p.value === this.projectForm.get('priority')?.value);
     return priority?.label || 'Orta';
@@ -429,89 +620,6 @@ export class ProjectDetailComponent implements OnInit {
     return status?.label || 'Başlatılmadı';
   }
 
-  // Quick Status Update
-  updateStatus(newStatus: string) {
-    this.projectService.updateProjectStatus(this.projectId, newStatus).subscribe({
-      next: () => {
-        this.project.status = newStatus;
-        this.projectForm.patchValue({ status: newStatus });
-        alert('Proje durumu güncellendi!');
-      },
-      error: (error) => {
-        console.error('Durum güncellenirken hata:', error);
-      }
-    });
-  }
-
-  // Quick Progress Update
-  updateProgress(newProgress: number) {
-    this.projectService.updateProjectProgress(this.projectId, newProgress).subscribe({
-      next: () => {
-        this.project.progressPercentage = newProgress;
-        alert('Proje ilerlemesi güncellendi!');
-      },
-      error: (error) => {
-        console.error('İlerleme güncellenirken hata:', error);
-      }
-    });
-  }
-
-  // File size validation
-  validateFileSize(file: File): boolean {
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    return file.size <= maxSize;
-  }
-
-  // File type validation
-  validateFileType(file: File): boolean {
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'image/png',
-      'image/jpeg',
-      'image/jpg'
-    ];
-    return allowedTypes.includes(file.type);
-  }
-
-  // Enhanced file selection with validation
-  onFileSelectedEnhanced(event: any) {
-    const files = event.target.files;
-    const validFiles: any[] = [];
-    const errors: string[] = [];
-
-    for (let file of files) {
-      if (!this.validateFileType(file)) {
-        errors.push(`${file.name}: Desteklenmeyen dosya türü`);
-        continue;
-      }
-      
-      if (!this.validateFileSize(file)) {
-        errors.push(`${file.name}: Dosya boyutu çok büyük (max 10MB)`);
-        continue;
-      }
-
-      validFiles.push({
-        name: file.name,
-        size: file.size,
-        file: file
-      });
-    }
-
-    this.newFiles = [...this.newFiles, ...validFiles];
-
-    if (errors.length > 0) {
-      alert('Bazı dosyalar eklenemedi:\n' + errors.join('\n'));
-    }
-
-    // Input'u temizle
-    event.target.value = '';
-  }
-
-  // Delete project
   deleteProject() {
     if (confirm(`"${this.project?.name}" projesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`)) {
       this.projectService.deleteProject(this.projectId).subscribe({
@@ -527,7 +635,6 @@ export class ProjectDetailComponent implements OnInit {
     }
   }
 
-  // Copy project info to clipboard
   copyProjectInfo() {
     const projectInfo = `
 Proje: ${this.project?.name}

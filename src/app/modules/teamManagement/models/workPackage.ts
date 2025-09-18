@@ -1,5 +1,5 @@
+import { DepartmentDto } from "../../departments/models/departmentsDto";
 import { Project } from "../../project/models/project";
-import { Department } from "./department";
 import { User } from "./user";
 
 export interface WorkPackage {
@@ -22,6 +22,6 @@ export interface WorkPackage {
   updatedAt: Date;
   // Navigation properties
   project?: Project;
-  department?: Department;
+  department?: DepartmentDto;
   technicalManager?: User;
 }

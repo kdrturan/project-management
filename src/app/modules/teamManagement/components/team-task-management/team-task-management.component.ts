@@ -402,7 +402,7 @@ loadAssignedTasks() {
 
 
   getDoneTasksCount(): number {
-    return this.assignedTasks.filter(t => t.status === 'Done').length;
+    return this.assignedTasks.filter(t => t.status === 'Tamamlanan').length;
   }
 
   // Kullanıcı adını getir

@@ -139,77 +139,324 @@
             </div>
           </div>
 
-          <!-- Proje Dosyaları -->
-          <div class="section-card">
-            <div class="section-header">
-              <h2>Proje Dosyaları</h2>
+          <!-- Proje Dosyaları Expandable Section -->
+          <div class="section-card expandable-section">
+            <div class="expander-header" (click)="toggleFilesSection()" [class.expanded]="isFilesSectionExpanded">
+              <span class="expander-icon" [class.expanded]="isFilesSectionExpanded">▶</span>
+              <h2 class="expander-title">Proje Dosyaları</h2>
+              <span class="file-count">{{ (projectFiles.length + newFiles.length) }} dosya</span>
               <button 
                 type="button" 
-                class="btn btn-outline" 
-                (click)="fileInput.click()"
-                *ngIf="isEditMode">
+                class="btn btn-outline btn-sm" 
+                (click)="addFiles($event)"
+                *ngIf="isEditMode && isFilesSectionExpanded">
                 📎 Dosya Ekle
               </button>
             </div>
 
-            <input 
-              #fileInput 
-              type="file" 
-              multiple 
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
-              style="display: none;" 
-              (change)="onFileSelected($event)">
+            <div class="expander-content" [class.expanded]="isFilesSectionExpanded">
+              <input 
+                #fileInput 
+                type="file" 
+                multiple 
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
+                style="display: none;" 
+                (change)="onFileSelected($event)">
 
-            <!-- Yeni Eklenen Dosyalar -->
-            <div class="file-section" *ngIf="newFiles.length > 0">
-              <h4>Yeni Dosyalar</h4>
-              <div class="file-list">
-                <div class="file-item new-file" *ngFor="let file of newFiles; let i = index">
-                  <div class="file-info">
-                    <span class="file-icon">{{ getFileIcon(file.name) }}</span>
-                    <div class="file-details">
-                      <div class="file-name">{{ file.name }}</div>
-                      <div class="file-size">{{ formatFileSize(file.size) }}</div>
+              <!-- Yeni Eklenen Dosyalar -->
+              <div class="file-section" *ngIf="newFiles.length > 0">
+                <h4>Yeni Dosyalar</h4>
+                <div class="file-list">
+                  <div class="file-item new-file" *ngFor="let file of newFiles; let i = index">
+                    <div class="file-info">
+                      <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                      <div class="file-details">
+                        <div class="file-name">{{ file.name }}</div>
+                        <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                      </div>
                     </div>
-                  </div>
-                  <button type="button" class="file-remove" (click)="removeNewFile(i)">×</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mevcut Dosyalar -->
-            <div class="file-section" *ngIf="projectFiles.length > 0">
-              <h4>Mevcut Dosyalar</h4>
-              <div class="file-list">
-                <div class="file-item" *ngFor="let file of projectFiles; let i = index">
-                  <div class="file-info">
-                    <span class="file-icon">{{ getFileIcon(file.originalFilename) }}</span>
-                    <div class="file-details">
-                      <div class="file-name">{{ file.originalFilename }}</div>
-                      <div class="file-size">{{ formatFileSize(file.fileSizeBytes) }}</div>
-                      <div class="file-date">{{ formatDate(file.createdAt) }}</div>
-                    </div>
-                  </div>
-                  <div class="file-actions">
-                    <button type="button" class="btn-icon" (click)="downloadFile(file)" title="İndir">
-                      📥
-                    </button>
-                    <button 
-                      type="button" 
-                      class="btn-icon delete" 
-                      (click)="deleteFile(file, i)" 
-                      *ngIf="isEditMode"
-                      title="Sil">
-                      🗑️
-                    </button>
+                    <button type="button" class="file-remove" (click)="removeNewFile(i)">×</button>
                   </div>
                 </div>
               </div>
+
+              <!-- Mevcut Dosyalar -->
+              <div class="file-section" *ngIf="projectFiles.length > 0">
+                <h4>Mevcut Dosyalar</h4>
+                <div class="file-list">
+                  <div class="file-item" *ngFor="let file of projectFiles; let i = index">
+                    <div class="file-info">
+                      <span class="file-icon">{{ getFileIcon(file.originalFilename) }}</span>
+                      <div class="file-details">
+                        <div class="file-name">{{ file.originalFilename }}</div>
+                        <div class="file-size">{{ formatFileSize(file.fileSizeBytes) }}</div>
+                        <div class="file-date">{{ formatDate(file.createdAt) }}</div>
+                      </div>
+                    </div>
+                    <div class="file-actions">
+                      <button type="button" class="btn-icon" (click)="downloadFile(file)" title="İndir">
+                        📥
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn-icon delete" 
+                        (click)="deleteFile(file, i)" 
+                        *ngIf="isEditMode"
+                        title="Sil">
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="empty-state" *ngIf="projectFiles.length === 0 && newFiles.length === 0">
+                <div class="empty-icon">📁</div>
+                <p>Henüz dosya eklenmemiş</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- İş Paketleri Expandable Section -->
+          <div class="section-card expandable-section">
+            <div class="expander-header" (click)="toggleWorkPackagesSection()" [class.expanded]="isWorkPackagesSectionExpanded">
+              <span class="expander-icon" [class.expanded]="isWorkPackagesSectionExpanded">▶</span>
+              <h2 class="expander-title">İş Paketleri</h2>
+              <span class="workpackage-count">{{ projectWorkPackages.length }} paket</span>
+              <button 
+                type="button" 
+                class="btn btn-outline btn-sm" 
+                (click)="addWorkPackage($event)"
+                *ngIf="isEditMode && isWorkPackagesSectionExpanded">
+                📦 Yeni İş Paketi
+              </button>
             </div>
 
-            <div class="empty-state" *ngIf="projectFiles.length === 0 && newFiles.length === 0">
-              <div class="empty-icon">📁</div>
-              <p>Henüz dosya eklenmemiş</p>
+            <div class="expander-content" [class.expanded]="isWorkPackagesSectionExpanded">
+              <div class="workpackages-container">
+                
+                <!-- Yeni İş Paketleri Formu -->
+                <div class="new-workpackages-section" *ngIf="newWorkPackages.length > 0 && isEditMode">
+                  <h4>Yeni İş Paketleri</h4>
+                  <div class="new-workpackage-list">
+                    <div class="new-workpackage-item" *ngFor="let wp of newWorkPackages; let i = index">
+                      <div class="workpackage-form-card">
+                        <div class="workpackage-form-header">
+                          <h5>Yeni İş Paketi {{ i + 1 }}</h5>
+                          <button type="button" class="btn-remove-workpackage" (click)="removeNewWorkPackage(i)">×</button>
+                        </div>
+                        
+                        <div class="workpackage-form-content">
+                          <div class="form-group">
+                            <label>İş Paketi Adı *</label>
+                            <input 
+                              type="text" 
+                              [(ngModel)]="wp.name" [ngModelOptions]="{standalone: true}"
+                              class="form-control"
+                              placeholder="İş paketi adını girin">
+                          </div>
+
+                          <div class="form-group">
+                            <label>Açıklama</label>
+                            <textarea 
+                              [(ngModel)]="wp.description" [ngModelOptions]="{standalone: true}"
+                              class="form-control" 
+                              rows="2"
+                              placeholder="İş paketi açıklaması..."></textarea>
+                          </div>
+
+                          <div class="form-row">
+                            <div class="form-group">
+                              <label>Durum</label>
+                              <select [(ngModel)]="wp.status" class="form-control" [ngModelOptions]="{standalone: true}"> 
+                                <option value="Başlatılmadı">Başlatılmadı</option>
+                                <option value="Devam Ediyor">Devam Ediyor</option>
+                                <option value="Tamamlandı">Tamamlandı</option>
+                                <option value="Beklemede">Beklemede</option>
+                              </select>
+                            </div>
+                            <div class="form-group">
+                              <label>Departman</label>
+                              <select 
+                                [(ngModel)]="wp.departmentId" 
+                                [ngModelOptions]="{standalone: true}"
+                                class="form-control"
+                                placeholder="Departman seçin">
+                                <option value="" disabled>Departman seçin</option>
+                                <option 
+                                  *ngFor="let department of departments" 
+                                  [value]="department.id">
+                                  {{ department.name }}
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div class="form-row">
+                            <div class="form-group">
+                              <label>Başlangıç Tarihi</label>
+                              <input 
+                                type="date" 
+                                [(ngModel)]="wp.plannedStartDate" [ngModelOptions]="{standalone: true}"
+                                class="form-control">
+                            </div>
+                            <div class="form-group">
+                              <label>Bitiş Tarihi</label>
+                              <input 
+                                type="date" 
+                                [(ngModel)]="wp.plannedEndDate" [ngModelOptions]="{standalone: true}"
+                                class="form-control">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mevcut İş Paketleri -->
+                <div class="workpackage-list" *ngIf="projectWorkPackages.length > 0">
+                  <h4 *ngIf="newWorkPackages.length > 0 && isEditMode">Mevcut İş Paketleri</h4>
+                  <div class="workpackage-item" *ngFor="let wp of projectWorkPackages; let i = index">
+                    
+                    <!-- Düzenleme Modunda Değilse (Normal Görünüm) -->
+                    <div *ngIf="!editingWorkPackages[i]">
+                      <div class="workpackage-header">
+                        <div class="workpackage-info">
+                          <div class="workpackage-name">{{ wp.name }}</div>
+                          <div class="workpackage-description">{{ wp.description }}</div>
+                        </div>
+                        <div class="workpackage-actions">
+                          <span class="workpackage-status" [ngClass]="getWorkPackageStatusClass(wp.status)">
+                            {{ getWorkPackageStatusLabel(wp.status) }}
+                          </span>
+                          <!-- Düzenleme ve Silme Butonları -->
+                          <button 
+                            type="button" 
+                            class="btn-icon edit-btn" 
+                            (click)="startEditingWorkPackage(wp, i)"
+                            *ngIf="isEditMode"
+                            title="Düzenle">
+                            ✏️
+                          </button>
+                          <button 
+                            type="button" 
+                            class="btn-icon delete-btn" 
+                            (click)="deleteWorkPackage(wp, i)"
+                            *ngIf="isEditMode"
+                            title="Sil">
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="workpackage-meta">
+                        <div class="workpackage-dates">
+                          <span class="date-item">
+                            <span class="date-label">Başlangıç:</span>
+                            <span class="date-value">{{ wp.plannedStartDate ? formatDate(wp.plannedStartDate) : '-' }}</span>
+                          </span>
+                          <span class="date-item">
+                            <span class="date-label">Bitiş:</span>
+                            <span class="date-value">{{ wp.plannedEndDate ? formatDate(wp.plannedEndDate) : '-' }}</span>
+                          </span>
+                        </div>
+                        <div class="workpackage-department" *ngIf="wp.departmentName">
+                          <span>🏢</span>
+                          <span>{{ wp.departmentName }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Düzenleme Modunda (Form Görünümü) -->
+                    <div *ngIf="editingWorkPackages[i]" class="workpackage-edit-form">
+                      <div class="workpackage-form-header">
+                        <h5>İş Paketini Düzenle</h5>
+                        <div class="edit-actions">
+                          <button type="button" class="btn btn-sm btn-primary" (click)="saveEditedWorkPackage(i)">
+                            ✓ Kaydet
+                          </button>
+                          <button type="button" class="btn btn-sm btn-secondary" (click)="cancelEditingWorkPackage(i)">
+                            ✕ İptal
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="workpackage-form-content">
+                        <div class="form-group">
+                          <label>İş Paketi Adı *</label>
+                          <input 
+                            type="text" 
+                            [(ngModel)]="editedWorkPackages[i].name" 
+                            [ngModelOptions]="{standalone: true}"
+                            class="form-control"
+                            placeholder="İş paketi adını girin">
+                        </div>
+
+                        <div class="form-group">
+                          <label>Açıklama</label>
+                          <textarea 
+                            [(ngModel)]="editedWorkPackages[i].description" 
+                            [ngModelOptions]="{standalone: true}"
+                            class="form-control" 
+                            rows="2"
+                            placeholder="İş paketi açıklaması..."></textarea>
+                        </div>
+
+                        <div class="form-row">
+                          <div class="form-group">
+                            <label>Durum</label>
+                            <select [(ngModel)]="editedWorkPackages[i].status" class="form-control" [ngModelOptions]="{standalone: true}"> 
+                              <option value="Başlatılmadı">Başlatılmadı</option>
+                              <option value="Devam Ediyor">Devam Ediyor</option>
+                              <option value="Tamamlandı">Tamamlandı</option>
+                              <option value="Beklemede">Beklemede</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Departman</label>
+                            <select 
+                              [(ngModel)]="editedWorkPackages[i].departmentId" 
+                              [ngModelOptions]="{standalone: true}"
+                              class="form-control">
+                              <option value="" disabled>Departman seçin</option>
+                              <option 
+                                *ngFor="let department of departments" 
+                                [value]="department.id">
+                                {{ department.name }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="form-row">
+                          <div class="form-group">
+                            <label>Başlangıç Tarihi</label>
+                            <input 
+                              type="date" 
+                              [(ngModel)]="editedWorkPackages[i].plannedStartDate" 
+                              [ngModelOptions]="{standalone: true}"
+                              class="form-control">
+                          </div>
+                          <div class="form-group">
+                            <label>Bitiş Tarihi</label>
+                            <input 
+                              type="date" 
+                              [(ngModel)]="editedWorkPackages[i].plannedEndDate" 
+                              [ngModelOptions]="{standalone: true}"
+                              class="form-control">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="empty-state" *ngIf="projectWorkPackages.length === 0 && newWorkPackages.length === 0">
+                  <div class="empty-icon">📦</div>
+                  <p>Bu projeye henüz iş paketi tanımlanmamış</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -239,6 +486,11 @@
             <div class="stat-item">
               <span class="stat-label">Dosya Sayısı:</span>
               <span class="stat-value">{{ projectFiles.length + newFiles.length }} dosya</span>
+            </div>
+
+            <div class="stat-item">
+              <span class="stat-label">İş Paketleri:</span>
+              <span class="stat-value">{{ projectWorkPackages.length }} paket</span>
             </div>
             
             <div class="stat-item">

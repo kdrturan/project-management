@@ -72,18 +72,91 @@
             <input type="number" formControlName="budget" class="form-control" placeholder="0.00">
           </div>
 
-          <div class="form-group">
-            <!-- <label>Proje Şablonu Seçin</label> -->
-            <!-- <div class="project-templates">
-              <div *ngFor="let template of templates" 
-                   class="template-card" 
-                   [class.selected]="selectedTemplate === template.id"
-                   (click)="selectTemplate(template.id)">
-                <span class="template-icon">{{ template.icon }}</span>
-                <h4>{{ template.name }}</h4>
-                <p>{{ template.desc }}</p>
+          <!-- Work Packages Expander Section -->
+          <div class="work-packages-section">
+            <div class="expander-header" (click)="toggleWorkPackageSection()">
+              <h3>
+                <span class="expander-icon" [class.expanded]="isWorkPackageExpanded">▶</span>
+                İş Paketleri
+                <span class="work-package-count" *ngIf="getWorkPackagePreviewCount() > 0">
+                  ({{ getWorkPackagePreviewCount() }} paket)
+                </span>
+              </h3>
+              <p class="expander-desc">Projeye ait iş paketlerini tanımlayın</p>
+            </div>
+
+            <div class="expander-content" [class.expanded]="isWorkPackageExpanded">
+              <div class="work-packages-container" formArrayName="workPackages">
+                <div class="work-packages-header">
+                  <button type="button" class="btn-add-workpackage" (click)="addWorkPackage()">
+                    <span>+</span> Yeni İş Paketi Ekle
+                  </button>
+                </div>
+
+                <div class="work-package-list" *ngIf="workPackages.length > 0">
+                  <div class="work-package-item" *ngFor="let wp of workPackages.controls; let i = index" [formGroupName]="i">
+                    <div class="work-package-header">
+                      <h4>İş Paketi {{ i + 1 }}</h4>
+                      <button type="button" class="btn-remove-workpackage" (click)="removeWorkPackage(i)">×</button>
+                    </div>
+
+                    <div class="work-package-form">
+                      <div class="form-group">
+                        <label>İş Paketi Adı <span class="required">*</span></label>
+                        <input type="text" formControlName="name" class="form-control" placeholder="İş paketi adını girin">
+                      </div>
+
+                      <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea formControlName="description" class="form-control" rows="2" placeholder="İş paketi açıklaması..."></textarea>
+                      </div>
+
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Durum</label>
+                          <select formControlName="status" class="form-control">
+                            <option *ngFor="let status of workPackageStatuses" [value]="status.value">
+                              {{ status.label }}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <label>Departman <span class="required">*</span></label>
+                          <select formControlName="department" 
+                                  class="form-control" 
+                                  (change)="onDepartmentChange(i, $any($event.target).value)">
+                            <option value="">Departman Seçiniz</option>
+                            <option *ngFor="let department of departments" [value]="department.id">
+                              {{ department.name }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Başlangıç Tarihi</label>
+                          <input type="date" formControlName="plannedStartDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                          <label>Bitiş Tarihi</label>
+                          <input type="date" formControlName="plannedEndDate" class="form-control">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Teknik Yönetici ID</label>
+                        <input type="number" formControlName="technicalManagerId" class="form-control" placeholder="Teknik yönetici ID">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="no-work-packages" *ngIf="workPackages.length === 0">
+                  <p>Henüz iş paketi eklenmedi. Yukarıdaki butonu kullanarak yeni iş paketi ekleyebilirsiniz.</p>
+                </div>
               </div>
-            </div> -->
+            </div>
           </div>
         </div>
 
@@ -102,7 +175,7 @@
                 {{ (projectForm.get('description')?.value || 'Açıklama girilmedi').substring(0, 50) + '...' }}
               </span>
             </div>
-            📋 Proje Özeti
+            
             <div class="preview-item">
               <span class="preview-label">Dosya Sayısı:</span>
               <span class="preview-value">{{ uploadedFiles.length }} dosya</span>
@@ -127,18 +200,11 @@
               <span class="preview-label">Bütçe:</span>
               <span class="preview-value">{{ formatCurrency(projectForm.get('budget')?.value) }}</span>
             </div>
-            
-            <!-- <div class="preview-item">
-              <span class="preview-label">Öncelik:</span>
-              <span class="preview-value" [style.color]="getPriorityColor()">
-                {{ priorities.find(p => p.value === projectForm.get('priority')?.value)?.label }}
-              </span>
-            </div> -->
-            
-            <!-- <div class="preview-item">
-              <span class="preview-label">Şablon:</span>
-              <span class="preview-value">{{ getSelectedTemplate()?.name }}</span>
-            </div> -->
+
+            <div class="preview-item" *ngIf="getWorkPackagePreviewCount() > 0">
+              <span class="preview-label">İş Paketleri:</span>
+              <span class="preview-value">{{ getWorkPackagePreviewCount() }} paket</span>
+            </div>
           </div>
         </div>
       </div>

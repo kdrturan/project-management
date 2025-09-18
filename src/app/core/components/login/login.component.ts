@@ -191,8 +191,8 @@ export class LoginComponent implements OnInit {
     this.router.navigate(['/register']);
   }
 
-  fillDemoCredentials(type: 'admin' | 'user') {
-    if (type === 'admin') {
+  fillDemoCredentials(type: 'Admin' | 'user') {
+    if (type === 'Admin') {
       this.loginData.email = 'admin@example.com';
       this.loginData.password = 'admin123';
     } else {

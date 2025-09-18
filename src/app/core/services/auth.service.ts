@@ -260,7 +260,7 @@ isLoggedIn(): boolean {
   }
 
   isAdmin(): boolean {
-    return this.getUserRole() === 'admin';
+    return this.getUserRole() === 'Admin';
   }
 
   isUser(): boolean {
