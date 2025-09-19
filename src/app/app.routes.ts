@@ -8,9 +8,10 @@ import { FilesComponent } from './core/components/files/files.component';
 import { ProjectDetailComponent } from './modules/project/components/project-detail/project-detail.component';
 import { ProjectHistoryComponent } from './modules/project/components/project-history/project-history.component';
 import { TaskCreateComponent } from './modules/teamManagement/components/task-create/task-create.component';
-import { LoginGuard } from './core/guards/login-guard.service';
-import { AuthGuard } from './core/guards/auth-guard.service';
-import { RoleGuard } from './core/guards/RoleGuard.service';
+import { LoginGuard } from './core/guards/login.guard';
+import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
+
 
 // Mevcut guard'larını import et
 
