@@ -95,8 +95,8 @@
     <div class="tasks-grid">
       <div *ngFor="let task of getFilteredTasks()" class="task-card" 
            [class.overdue]="isOverdue(task)"
-           [class.completed]="task.status === 'Done'">
-        
+           [class.completed]="task.status === 'Done'"
+            (click)="openTaskFiles(task.id)">
         <div class="task-content">
           <!-- Task Header -->
           <div class="task-header">

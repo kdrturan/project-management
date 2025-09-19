@@ -21,7 +21,9 @@ export class LoginGuard implements CanActivate {
       this.router.navigate(['/projects']);
       return false;
     }
-      return true;
+    
+    console.log('User not logged in, allowing access to login page');
+    return true;
   }
 }
 

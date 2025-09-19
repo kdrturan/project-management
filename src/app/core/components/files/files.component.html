@@ -122,8 +122,8 @@
           </div>
           
           <div class="file-meta">
-            <span class="file-size">{{ formatBytes(file.size) }}</span>
-            <span class="file-date">{{ formatDate(file.uploadDate) }}</span>
+            <span class="file-size">{{ formatBytes(file.fileSizeBytes) }}</span>
+            <span class="file-date">{{ formatDate(file.createdAt) }}</span>
           </div>
 
           <div class="file-project" *ngIf="file.projectName">
@@ -236,13 +236,13 @@
                     title="Önizle">
                     👁️
                   </button>
-                  <button 
+                  <!-- <button 
                     class="action-btn-small delete" 
                     (click)="confirmDelete(file)"
                     *ngIf="canDelete(file)"
                     title="Sil">
                     🗑️
-                  </button>
+                  </button> -->
                 </div>
               </td>
             </tr>

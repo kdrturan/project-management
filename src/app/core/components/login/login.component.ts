@@ -115,21 +115,31 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  private handleSuccessfulLogin() {
-    this.successMessage = 'Giriş başarılı! Yönlendiriliyorsunuz...';
-    
-    // Remember me işlemi - sadece email'i sakla
-    if (this.rememberMe) {
-      localStorage.setItem('rememberedEmail', this.loginData.email);
-    } else {
-      localStorage.removeItem('rememberedEmail');
-    }
-    
-    // Return URL'e yönlendir
-    setTimeout(() => {
-      this.router.navigate([this.returnUrl]);
-    }, 1000);
+private handleSuccessfulLogin() {
+  this.successMessage = 'Giriş başarılı! Yönlendiriliyorsunuz...';
+  
+  // Remember me işlemi - sadece email'i sakla
+  if (this.rememberMe) {
+    localStorage.setItem('rememberedEmail', this.loginData.email);
+  } else {
+    localStorage.removeItem('rememberedEmail');
   }
+  
+  // Role'e göre yönlendirme
+  let targetRoute = this.returnUrl;
+  
+  // Eğer returnUrl '/projects' veya yoksa, role'e göre belirle
+  if (!this.returnUrl || this.returnUrl === '/projects' || this.returnUrl === '/') {
+    targetRoute = this.authService.getDefaultRouteForUser();
+    console.log('🚀 Role-based redirect to:', targetRoute);
+  } else {
+    console.log('🔄 Redirecting to return URL:', targetRoute);
+  }
+  
+  setTimeout(() => {
+    this.router.navigate([targetRoute]);
+  }, 1000);
+}
 
   private handleLoginError(error: any) {
     if (error.status === 401) {

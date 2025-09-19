@@ -8,6 +8,7 @@ import { FileItem } from '../../models/fileItem';
 import { Project } from '../../../modules/project/models/project';
 import { AuthService } from '../../services/auth.service';
 import { filter, take } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -64,10 +65,12 @@ export class FilesComponent implements OnInit {
   fileToDelete: FileItem | null = null;
   isDeleting: boolean = false;
 
+  taskId:number = 0;
   constructor(
     private fileService: FileService,
     private projectService: ProjectService,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -78,8 +81,35 @@ export class FilesComponent implements OnInit {
       this.loadFiles();
       this.loadProjects();
     });
-
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('taskId');
+      if (id) {
+        this.taskId = Number(id);
+        this.getTaskFiles();
+      }
+    });
   }
+
+
+  getTaskFiles() {
+    this.isLoading = true;
+    this.fileService.getFilesByTaskId(this.taskId).subscribe({
+      next: (response) => {
+        this.files = response.data; 
+        this.isLoading = false;
+        this.calculateStats();
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Görev dosyaları yüklenirken hata:', error);
+        this.error = 'Görev dosyaları yüklenirken bir hata oluştu.';
+        this.isLoading = false;
+        this.calculateStats();
+        this.applyFilters();
+      }
+    });
+  }
+
 
   // Data Loading Methods
 loadFiles() {

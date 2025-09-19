@@ -15,6 +15,14 @@ export class FileService {
   private apiUrl = `${environment.apiUrl}/Attachments`;
 
 
+
+  getFilesByTaskId(taskId:number):Observable<ListResponseModel<FileItem>>{
+    const newUrl = this.apiUrl + `/task?id=${taskId}`;
+    return this.httpClient.get<ListResponseModel<FileItem>>(newUrl);
+  }
+
+
+
   getProjectFiles(projectId:number):Observable<ListResponseModel<FileItem>>{
     const newUrl = this.apiUrl + `/project/${projectId}`;
     return this.httpClient.get<ListResponseModel<FileItem>>(newUrl);

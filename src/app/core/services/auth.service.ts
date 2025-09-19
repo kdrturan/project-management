@@ -306,4 +306,31 @@ isLoggedIn(): boolean {
 
     return throwError(() => ({ status: error.status, message: errorMessage }));
   }
+
+
+
+  isDeveloper(): boolean {
+  return this.getUserRole() === 'Developer';
+}
+
+isTechnicalManager(): boolean {
+  return this.getUserRole() === 'TechnicalManager';
+}
+
+// Login başarılı olduğunda role'e göre yönlendirme için
+getDefaultRouteForUser(): string {
+  const role = this.getUserRole();
+  
+  switch (role) {
+    case 'Developer':
+      return '/user-tasks';
+    case 'TechnicalManager':
+      return '/team-management';
+    case 'Admin':
+      return '/projects';
+    default:
+      console.log('⚠️ Unknown role, defaulting to projects');
+      return '/projects';
+  }
+}
 }

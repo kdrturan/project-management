@@ -6,6 +6,7 @@ import { TaskService } from '../../../task/services/task.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserTask } from '../../../teamManagement/models/userTask';
 import { User } from '../../../teamManagement/models/user';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-my-tasks',
@@ -35,7 +36,8 @@ export class UserTaskComponent implements OnInit {
 
   constructor(
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: Router
   ) {}
 
   ngOnInit() {
@@ -150,6 +152,14 @@ export class UserTaskComponent implements OnInit {
       }
     });
   }
+
+
+openTaskFiles(taskId: number) {
+  this.route.navigate(['/file-management/task', taskId]);
+}
+
+
+
 
   getFilteredTasks(): UserTask[] {
     return this.myTasks.filter(task => {
