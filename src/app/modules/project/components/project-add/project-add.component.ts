@@ -1,20 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 import { ProjectService } from '../../services/project-service.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WorkpackageService } from '../../../workPackage/services/workpackage.service';
-import { WorkPackageDto } from '../../../workPackage/models/workPackageDto';
 import { DepartmentService } from '../../../departments/services/department.service';
 import { DepartmentDto } from '../../../departments/models/departmentsDto';
 import { ListResponseModel } from '../../../../core/models/listResponseModel';
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-project-create',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
   templateUrl: './project-add.component.html',
   styleUrls: ['./project-add.component.css']
 })

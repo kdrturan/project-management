@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService } from '../../services/project-service.service';
 import { FileService } from '../../../../core/services/file.service';
@@ -11,11 +10,12 @@ import { DepartmentService } from '../../../departments/services/department.serv
 import { DepartmentDto } from '../../../departments/models/departmentsDto';
 import { WorkpackageService } from '../../../workPackage/services/workpackage.service';
 import { UpdateWorkPackageDto } from '../../../workPackage/models/updateWorkPackageDto';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule , CommonModule, FormsModule],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css'],
 })
